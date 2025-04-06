@@ -4,12 +4,12 @@ import PageTemplate from '@/components/PageTemplate';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
-export default function DashboardScreen() {
+export default function HealthScreen() {
   const colorScheme = useColorScheme();
   
   return (
     <View style={[styles.container, { backgroundColor: Colors[colorScheme ?? 'light'].background }]}>
-      <PageTemplate pageId="dashboard" />
+      <PageTemplate pageId="health" />
     </View>
   );
 }
@@ -19,4 +19,4 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
   },
-});
+}); 

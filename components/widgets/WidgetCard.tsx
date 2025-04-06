@@ -129,16 +129,16 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
         />;
       case 'activity':
         return <ActivityWidget
+          title={widget.config.title || 'Daily Activity'}
+          subtitle={widget.config.subtitle || 'How active is your site today?'}
           percentage={widget.config.percentage || 0}
           average={widget.config.average || 0}
-          clicks={widget.config.clicks || { value: 0, trend: 'up' }}
-          downloads={widget.config.downloads || { value: 0, trend: 'up' }}
-          revenue={widget.config.revenue || { value: 0, trend: 'up' }}
+          metrics={widget.config.metrics || []}
           onUpdate={(config) => handleUpdateConfig({...widget.config, ...config})}
         />;
       default:
         return (
-          <Text style={[styles.placeholder, { color: Colors[colorScheme ?? 'light'].textSecondary }]}>
+          <Text style={[styles.placeholder, { color: '#64748B' }]}>
             {widget.type.charAt(0).toUpperCase() + widget.type.slice(1)} widget
           </Text>
         );

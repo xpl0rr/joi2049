@@ -205,7 +205,14 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageId, onAddWidget }) => {
               <Pressable style={styles.closeEditor} onPress={() => setEditingWidget(null)}>
                 <IconSymbol name="xmark.circle.fill" size={24} color="#334155" />
               </Pressable>
-              {renderEditForm()}
+              <ScrollView 
+                style={styles.editScrollView}
+                showsVerticalScrollIndicator={true}
+                nestedScrollEnabled={true}
+                contentContainerStyle={styles.editScrollContent}
+              >
+                {renderEditForm()}
+              </ScrollView>
             </View>
           </Pressable>
         )}
@@ -316,7 +323,8 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: 12,
     padding: 20,
-    maxHeight: '80%',
+    paddingBottom: 0,
+    maxHeight: '85%',
     backgroundColor: '#FFFFFF',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -327,7 +335,7 @@ const styles = StyleSheet.create({
   editTitle: {
     fontSize: 18,
     fontWeight: '600',
-    marginBottom: 16,
+    marginBottom: 10,
     color: '#334155',
   },
   closeEditor: {
@@ -340,6 +348,12 @@ const styles = StyleSheet.create({
   },
   bottomPadding: {
     height: 20,
+  },
+  editScrollView: {
+    maxHeight: 400,
+  },
+  editScrollContent: {
+    paddingBottom: 20,
   },
 });
 

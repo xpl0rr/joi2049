@@ -55,11 +55,8 @@ const defaultWidgets: Widget[] = [
     type: 'activity', 
     title: 'Daily Activity', 
     config: { 
-      percentage: 65.8, 
-      average: 1250, 
-      clicks: { value: 1024, trend: 'up' }, 
-      downloads: { value: 359, trend: 'up' }, 
-      revenue: { value: 2800, trend: 'down' } 
+      title: 'Track Progress',
+      percentage: 66
     }, 
     size: 'medium' 
   },

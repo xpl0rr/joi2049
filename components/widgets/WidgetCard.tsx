@@ -63,8 +63,8 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
   // Widget size styles
   const sizeStyles = {
     small: { width: '100%', height: 130 },
-    medium: { width: '100%', height: 240 },
-    large: { width: '100%', height: 300 },
+    medium: { width: '100%', height: 350 },
+    large: { width: '100%', height: 400 },
   };
   
   // Use standard styles for all widgets

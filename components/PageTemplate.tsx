@@ -7,6 +7,7 @@ import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { IconSymbol } from './ui/IconSymbol';
 import { useDrop } from './hooks/useDrop';
+import ActivityEditForm from './widgets/ActivityEditForm';
 
 interface PageTemplateProps {
   pageId: string;
@@ -32,6 +33,35 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageId, onAddWidget }) => {
 
   const handleEditWidget = (widgetId: string) => {
     setEditingWidget(widgetId);
+  };
+
+  // Add a function to render the appropriate edit form based on widget type
+  const renderEditForm = () => {
+    if (!editingWidget) return null;
+    
+    const widget = page.widgets.find(w => w.id === editingWidget);
+    if (!widget) return null;
+    
+    switch (widget.type) {
+      case 'activity':
+        return (
+          <ActivityEditForm 
+            config={widget.config} 
+            onUpdate={(newConfig) => {
+              updateWidgetConfig(pageId, editingWidget, newConfig);
+              setEditingWidget(null);
+            }}
+            onCancel={() => setEditingWidget(null)}
+          />
+        );
+      // Add cases for other widget types as needed
+      default:
+        return (
+          <Text style={{ color: '#64748B', textAlign: 'center' }}>
+            Edit options for this widget type are not yet available.
+          </Text>
+        );
+    }
   };
 
   // This would be called when a drag operation starts/ends
@@ -175,7 +205,7 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageId, onAddWidget }) => {
               <Pressable style={styles.closeEditor} onPress={() => setEditingWidget(null)}>
                 <IconSymbol name="xmark.circle.fill" size={24} color="#334155" />
               </Pressable>
-              {/* Widget configuration form would go here */}
+              {renderEditForm()}
             </View>
           </Pressable>
         )}

@@ -127,10 +127,11 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     padding: 0,
+    paddingBottom: 10,
     backgroundColor: 'transparent',
   },
   header: {
-    marginBottom: 16,
+    marginBottom: 12,
   },
   title: {
     fontSize: 18,
@@ -146,7 +147,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
-    marginVertical: 10,
+    marginVertical: 8,
   },
   progressTextContainer: {
     position: 'absolute',
@@ -169,10 +170,11 @@ const styles = StyleSheet.create({
   metricsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 20,
-    paddingTop: 20,
+    marginTop: 16,
+    paddingTop: 16,
     borderTopWidth: 1,
     borderTopColor: '#E2E8F0',
+    paddingBottom: 8,
   },
   metricBox: {
     flex: 1,

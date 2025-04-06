@@ -6,6 +6,7 @@ import WidgetCard from '@/components/widgets/WidgetCard';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import TabManager from '@/components/TabManager';
 
 export default function WidgetsStore() {
   const colorScheme = useColorScheme();
@@ -33,127 +34,131 @@ export default function WidgetsStore() {
   }, {} as Record<string, Widget[]>);
 
   return (
-    <SafeAreaView
-      style={[
-        styles.container,
-        { backgroundColor: Colors[colorScheme ?? 'light'].background }
-      ]}
-    >
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: Colors[colorScheme ?? 'light'].text }]}>
-          Widget Store
-        </Text>
-        {selectedPageId && (
-          <Pressable
-            onPress={() => setSelectedPageId(null)}
-            style={styles.selectedPage}
-          >
-            <Text style={[styles.selectedPageText, { color: Colors[colorScheme ?? 'light'].tint }]}>
-              Adding to: {pages[selectedPageId].name}
-            </Text>
-            <IconSymbol name="xmark.circle.fill" size={16} color={Colors[colorScheme ?? 'light'].tint} />
-          </Pressable>
-        )}
-      </View>
-
-      {showPageSelector && !selectedPageId && (
-        <View style={[styles.pageSelector, { backgroundColor: Colors[colorScheme ?? 'light'].cardBackground }]}>
-          <Text style={[styles.pageSelectorTitle, { color: Colors[colorScheme ?? 'light'].text }]}>
-            Select a page to add widget
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.title}>
+            Widget Store
           </Text>
-          <View style={styles.pageList}>
-            {Object.values(pages).map((page) => (
-              <Pressable
-                key={page.id}
-                style={[
-                  styles.pageItem,
-                  { backgroundColor: Colors[colorScheme ?? 'light'].background }
-                ]}
-                onPress={() => setSelectedPageId(page.id)}
-              >
-                <Text style={[styles.pageItemText, { color: Colors[colorScheme ?? 'light'].text }]}>
-                  {page.name}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-          <Pressable
-            style={styles.closePageSelector}
-            onPress={() => setShowPageSelector(false)}
-          >
-            <IconSymbol name="xmark.circle.fill" size={24} color={Colors[colorScheme ?? 'light'].text} />
-          </Pressable>
+          {selectedPageId && (
+            <Pressable
+              onPress={() => setSelectedPageId(null)}
+              style={styles.selectedPage}
+            >
+              <Text style={styles.selectedPageText}>
+                Adding to: {pages[selectedPageId].name}
+              </Text>
+              <IconSymbol name="xmark.circle.fill" size={16} color="#4D82F3" />
+            </Pressable>
+          )}
         </View>
-      )}
 
-      <ScrollView style={styles.content}>
-        {Object.entries(widgetsByType).map(([type, widgets]) => (
-          <View key={type} style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: Colors[colorScheme ?? 'light'].textSecondary }]}>
-              {type.charAt(0).toUpperCase() + type.slice(1)} Widgets
-            </Text>
-            <View style={styles.widgetGrid}>
-              {widgets.map((widget) => (
-                <View key={widget.id} style={styles.widgetContainer}>
-                  <WidgetCard widget={widget} />
+        <ScrollView style={styles.content}>
+          <TabManager />
+          
+          {showPageSelector && !selectedPageId && (
+            <View style={styles.pageSelector}>
+              <Text style={styles.pageSelectorTitle}>
+                Select a page to add widget
+              </Text>
+              <View style={styles.pageList}>
+                {Object.values(pages).map((page) => (
                   <Pressable
-                    style={[
-                      styles.addButton,
-                      { backgroundColor: Colors[colorScheme ?? 'light'].tint }
-                    ]}
-                    onPress={() => handleAddWidget(widget)}
+                    key={page.id}
+                    style={styles.pageItem}
+                    onPress={() => setSelectedPageId(page.id)}
                   >
-                    <IconSymbol name="plus" size={16} color="#FFFFFF" />
-                    <Text style={styles.addButtonText}>Add to Page</Text>
+                    <Text style={styles.pageItemText}>
+                      {page.name}
+                    </Text>
                   </Pressable>
-                </View>
-              ))}
+                ))}
+              </View>
+              <Pressable
+                style={styles.closePageSelector}
+                onPress={() => setShowPageSelector(false)}
+              >
+                <IconSymbol name="xmark.circle.fill" size={24} color="#334155" />
+              </Pressable>
             </View>
-          </View>
-        ))}
-      </ScrollView>
+          )}
+
+          {Object.entries(widgetsByType).map(([type, widgets]) => (
+            <View key={type} style={styles.section}>
+              <Text style={styles.sectionTitle}>
+                {type.charAt(0).toUpperCase() + type.slice(1)} Widgets
+              </Text>
+              <View style={styles.widgetGrid}>
+                {widgets.map((widget) => (
+                  <View key={widget.id} style={styles.widgetContainer}>
+                    <WidgetCard widget={widget} />
+                    <Pressable
+                      style={styles.addButton}
+                      onPress={() => handleAddWidget(widget)}
+                    >
+                      <IconSymbol name="plus" size={16} color="#FFFFFF" />
+                      <Text style={styles.addButtonText}>Add to Page</Text>
+                    </Pressable>
+                  </View>
+                ))}
+              </View>
+            </View>
+          ))}
+        </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#F9FAFB',
+  },
   container: {
     flex: 1,
+    backgroundColor: '#F9FAFB',
   },
   header: {
-    padding: 16,
+    padding: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+    backgroundColor: '#FFFFFF',
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#111827',
   },
   selectedPage: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 122, 255, 0.1)',
+    backgroundColor: '#EEF2FF',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 16,
+    borderRadius: 8,
   },
   selectedPageText: {
     marginRight: 6,
     fontSize: 14,
     fontWeight: '500',
+    color: '#4D82F3',
   },
   content: {
     flex: 1,
+    padding: 16,
   },
   section: {
     marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
-    marginHorizontal: 16,
-    marginBottom: 8,
+    color: '#64748B',
+    marginBottom: 12,
   },
   widgetGrid: {
     padding: 8,
@@ -168,7 +173,8 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 8,
     marginHorizontal: 8,
-    marginTop: -4,
+    marginTop: 8,
+    backgroundColor: '#4D82F3',
   },
   addButtonText: {
     color: '#FFFFFF',
@@ -177,23 +183,21 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   pageSelector: {
-    position: 'absolute',
-    top: 80,
-    left: 16,
-    right: 16,
-    zIndex: 10,
-    borderRadius: 16,
+    borderRadius: 12,
     padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    marginBottom: 16,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#E2E8F0',
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowRadius: 4,
+    elevation: 2,
   },
   pageSelectorTitle: {
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 12,
+    color: '#334155',
   },
   pageList: {
     flexDirection: 'row',
@@ -201,15 +205,17 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   pageItem: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
     marginRight: 8,
     marginBottom: 8,
+    backgroundColor: '#F1F5F9',
   },
   pageItemText: {
     fontSize: 14,
     fontWeight: '500',
+    color: '#334155',
   },
   closePageSelector: {
     position: 'absolute',

@@ -14,6 +14,7 @@ export interface Page {
   id: string;
   name: string;
   widgets: Widget[];
+  customizable?: boolean; // Flag to indicate if this page can be deleted
 }
 
 interface WidgetContextType {
@@ -69,6 +70,7 @@ const defaultPages: Record<string, Page> = {
   dashboard: {
     id: 'dashboard',
     name: 'Dashboard',
+    customizable: false, // Can't delete the dashboard
     widgets: [
       { ...defaultWidgets[2], id: `${defaultWidgets[2].id}-1`, size: 'medium' },
       { ...defaultWidgets[0], id: `${defaultWidgets[0].id}-1`, size: 'medium' },
@@ -78,16 +80,19 @@ const defaultPages: Record<string, Page> = {
   health: { 
     id: 'health', 
     name: 'Health', 
+    customizable: true,
     widgets: [] 
   },
   finance: { 
     id: 'finance', 
     name: 'Finance', 
+    customizable: true,
     widgets: [] 
   },
   todo: { 
     id: 'todo', 
     name: 'Todo', 
+    customizable: true,
     widgets: [
       { ...defaultWidgets[1], id: `${defaultWidgets[1].id}-2`, size: 'medium' },
     ] 
@@ -131,16 +136,33 @@ export const WidgetProvider: React.FC<{children: ReactNode}> = ({ children }) =>
   };
 
   const createPage = (name: string) => {
-    const id = `page-${Date.now()}`;
-    setPages(prev => ({
-      ...prev,
-      [id]: { id, name, widgets: [] },
-    }));
+    const id = name.toLowerCase().replace(/\s+/g, '-');
+    setPages(prev => {
+      // Check if page with this ID already exists
+      if (prev[id]) {
+        return prev; // Don't create duplicate
+      }
+      
+      return {
+        ...prev,
+        [id]: { 
+          id, 
+          name, 
+          widgets: [],
+          customizable: true 
+        },
+      };
+    });
     return id;
   };
 
   const removePage = (pageId: string) => {
     setPages(prev => {
+      // Don't allow removing non-customizable pages
+      if (!prev[pageId]?.customizable) {
+        return prev;
+      }
+      
       const newPages = { ...prev };
       delete newPages[pageId];
       return newPages;

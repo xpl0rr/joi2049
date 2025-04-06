@@ -85,16 +85,6 @@ const defaultPages: Record<string, Page> = {
     name: 'Finance', 
     widgets: [] 
   },
-  workouts: { 
-    id: 'workouts', 
-    name: 'Workouts', 
-    widgets: [] 
-  },
-  diet: { 
-    id: 'diet', 
-    name: 'Diet', 
-    widgets: [] 
-  },
   todo: { 
     id: 'todo', 
     name: 'Todo', 

@@ -66,6 +66,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="finance"
+        options={{
+          title: 'Finance',
+          tabBarIcon: ({ color }) => <IconSymbol size={22} name="dollarsign.circle.fill" color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="todo"
         options={{
           title: 'Todo',

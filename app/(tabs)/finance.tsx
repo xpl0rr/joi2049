@@ -1,14 +1,22 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
-import { router } from 'expo-router';
+import { StyleSheet, View } from 'react-native';
 import PageTemplate from '@/components/PageTemplate';
+import { Colors } from '@/constants/Colors';
+import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function FinanceScreen() {
-  const handleAddWidget = () => {
-    router.push('/widgets');
-  };
-
+  const colorScheme = useColorScheme();
+  
   return (
-    <PageTemplate pageId="finance" onAddWidget={handleAddWidget} />
+    <View style={[styles.container, { backgroundColor: '#F9FAFB' }]}>
+      <PageTemplate pageId="finance" />
+    </View>
   );
-} 
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    width: '100%',
+  },
+}); 

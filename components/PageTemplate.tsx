@@ -8,6 +8,7 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { IconSymbol } from './ui/IconSymbol';
 import { useDrop } from './hooks/useDrop';
 import ActivityEditForm from './widgets/ActivityEditForm';
+import NotesEditForm from './widgets/NotesEditForm';
 
 interface PageTemplateProps {
   pageId: string;
@@ -46,6 +47,17 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageId, onAddWidget }) => {
       case 'activity':
         return (
           <ActivityEditForm 
+            config={widget.config} 
+            onUpdate={(newConfig) => {
+              updateWidgetConfig(pageId, editingWidget, newConfig);
+              setEditingWidget(null);
+            }}
+            onCancel={() => setEditingWidget(null)}
+          />
+        );
+      case 'notes':
+        return (
+          <NotesEditForm 
             config={widget.config} 
             onUpdate={(newConfig) => {
               updateWidgetConfig(pageId, editingWidget, newConfig);

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TextInput } from 'react-native';
 
 interface NotesWidgetProps {
@@ -7,7 +7,12 @@ interface NotesWidgetProps {
 }
 
 const NotesWidget: React.FC<NotesWidgetProps> = ({ notes: initialNotes, onUpdate }) => {
-  const [notes, setNotes] = useState(initialNotes);
+  const [notes, setNotes] = useState(initialNotes || '');
+
+  // Update local state when props change (e.g., when edited through form)
+  useEffect(() => {
+    setNotes(initialNotes || '');
+  }, [initialNotes]);
 
   const handleChange = (text: string) => {
     setNotes(text);

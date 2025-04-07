@@ -18,8 +18,8 @@ interface WidgetCardProps {
   onRemove?: () => void;
   onEdit?: () => void;
   draggable?: boolean;
-  onDragEnd?: () => void;
-  onDragStart?: (isDragging: boolean) => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
 }
 
 const WidgetCard: React.FC<WidgetCardProps> = ({ 
@@ -27,12 +27,11 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
   onRemove, 
   onEdit,
   draggable = false,
-  onDragEnd,
-  onDragStart
+  onMoveUp,
+  onMoveDown
 }) => {
   const colorScheme = useColorScheme();
   const { updateWidgetConfig, pages } = useWidgets();
-  const [isDragging, setIsDragging] = useState(false);
   
   // Animated values for visual feedback
   const scale = useSharedValue(1);
@@ -68,33 +67,6 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
   
   // Use standard styles for all widgets
   const widgetStyles = sizeStyles[widget.size];
-
-  // Handle drag start
-  const handleDragStart = () => {
-    if (!draggable) return;
-    
-    setIsDragging(true);
-    scale.value = withSpring(1.05);
-    if (onDragStart) {
-      onDragStart(true);
-    }
-  };
-  
-  // Handle drag end
-  const handleDragEnd = () => {
-    if (!isDragging) return;
-    
-    setIsDragging(false);
-    scale.value = withSpring(1);
-    
-    if (onDragEnd) {
-      onDragEnd();
-    }
-    
-    if (onDragStart) {
-      onDragStart(false);
-    }
-  };
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -152,14 +124,9 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
         style={[
           styles.container, 
           { backgroundColor: '#FFFFFF' },
-          widgetStyles,
-          isDragging && styles.draggingContainer
+          widgetStyles
         ]}>
-        <Pressable 
-          style={styles.header}
-          onLongPress={draggable ? handleDragStart : undefined}
-          onPress={isDragging ? handleDragEnd : undefined}
-          delayLongPress={300}>
+        <View style={styles.header}>
           <View style={styles.titleContainer}>
             <IconSymbol name={getTypeIcon()} size={22} color={Colors[colorScheme ?? 'light'].tint} />
             <Text style={[styles.title, { color: Colors[colorScheme ?? 'light'].text }]}>
@@ -167,23 +134,28 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
             </Text>
           </View>
           <View style={styles.actions}>
-            {onEdit && !isDragging && (
+            {draggable && onMoveUp && (
+              <Pressable onPress={onMoveUp} style={styles.iconButton}>
+                <IconSymbol name="arrow.up" size={16} color={Colors[colorScheme ?? 'light'].textSecondary} />
+              </Pressable>
+            )}
+            {draggable && onMoveDown && (
+              <Pressable onPress={onMoveDown} style={styles.iconButton}>
+                <IconSymbol name="arrow.down" size={16} color={Colors[colorScheme ?? 'light'].textSecondary} />
+              </Pressable>
+            )}
+            {onEdit && (
               <Pressable onPress={onEdit} style={styles.iconButton}>
                 <IconSymbol name="pencil" size={16} color={Colors[colorScheme ?? 'light'].textSecondary} />
               </Pressable>
             )}
-            {onRemove && !isDragging && (
+            {onRemove && (
               <Pressable onPress={onRemove} style={styles.iconButton}>
                 <IconSymbol name="xmark" size={16} color={Colors[colorScheme ?? 'light'].textSecondary} />
               </Pressable>
             )}
-            {isDragging && (
-              <Pressable onPress={handleDragEnd} style={styles.iconButton}>
-                <IconSymbol name="checkmark" size={16} color="#10B981" />
-              </Pressable>
-            )}
           </View>
-        </Pressable>
+        </View>
         <View style={styles.content}>
           {renderWidgetContent()}
         </View>
@@ -204,15 +176,6 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
     overflow: 'hidden',
-  },
-  draggingContainer: {
-    borderWidth: 2,
-    borderColor: '#4D82F3',
-    shadowColor: '#4D82F3',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 5,
   },
   header: {
     flexDirection: 'row',

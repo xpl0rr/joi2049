@@ -19,75 +19,58 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageId, onAddWidget }) => {
   const { pages, removeWidgetFromPage, updateWidgetConfig, reorderWidgets } = useWidgets();
   const page = pages[pageId];
   const [editingWidget, setEditingWidget] = useState<string | null>(null);
-  const [isScrollEnabled, setIsScrollEnabled] = useState(true);
-  const [isDragging, setIsDragging] = useState(false);
-  const [draggingWidget, setDraggingWidget] = useState<string | null>(null);
-  const dragTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Function to handle the dragging state change with debounce to avoid false positives
-  const handleDragStateChange = (isDragging: boolean, widgetId?: string) => {
-    // Clear any existing timeout
-    if (dragTimeoutRef.current) {
-      clearTimeout(dragTimeoutRef.current);
-      dragTimeoutRef.current = null;
-    }
-
-    if (isDragging) {
-      // Immediately disable scroll when dragging starts
-      setIsScrollEnabled(false);
-      setIsDragging(true);
-      if (widgetId) {
-        setDraggingWidget(widgetId);
-      }
-    } else {
-      // Use a slight delay before enabling scroll again to avoid conflicts
-      dragTimeoutRef.current = setTimeout(() => {
-        setIsScrollEnabled(true);
-        setIsDragging(false);
-        setDraggingWidget(null);
-        dragTimeoutRef.current = null;
-      }, 300);
-    }
-  };
-
-  // Clean up timeout on unmount
-  React.useEffect(() => {
-    return () => {
-      if (dragTimeoutRef.current) {
-        clearTimeout(dragTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  // Handle when a widget is dropped - moves it up one position
-  const handleWidgetDrop = (widgetId: string) => {
-    if (!widgetId || !page) return;
+  // Handle moving a widget up in order
+  const handleMoveWidgetUp = (widgetId: string) => {
+    if (!page) return;
     
     try {
-      // Find the current index of the dragged widget
+      // Find the current index of the widget
       const currentIndex = page.widgets.findIndex(w => w.id === widgetId);
-      if (currentIndex === -1 || page.widgets.length <= 1) return;
-
+      if (currentIndex <= 0 || page.widgets.length <= 1) return; // Already at the top
+      
       // Create a new widget order
       const newWidgetOrder = [...page.widgets];
       
       // Remove the widget from its current position
       const [movedWidget] = newWidgetOrder.splice(currentIndex, 1);
       
-      // Move the widget one position up (if not already at the top)
-      const targetIndex = Math.max(0, currentIndex - 1);
-      
-      // Insert it at the target position
+      // Insert it one position up
+      const targetIndex = currentIndex - 1;
       newWidgetOrder.splice(targetIndex, 0, movedWidget);
       
       // Update the widget order in context
       console.log('Moving widget up', { from: currentIndex, to: targetIndex });
       reorderWidgets(pageId, newWidgetOrder.map(w => w.id));
     } catch (error) {
-      console.error('Error during widget drop handling:', error);
-    } finally {
-      // Always ensure we reset the dragging state
-      handleDragStateChange(false);
+      console.error('Error moving widget up:', error);
+    }
+  };
+  
+  // Handle moving a widget down in order
+  const handleMoveWidgetDown = (widgetId: string) => {
+    if (!page) return;
+    
+    try {
+      // Find the current index of the widget
+      const currentIndex = page.widgets.findIndex(w => w.id === widgetId);
+      if (currentIndex === -1 || currentIndex >= page.widgets.length - 1) return; // Already at the bottom
+      
+      // Create a new widget order
+      const newWidgetOrder = [...page.widgets];
+      
+      // Remove the widget from its current position
+      const [movedWidget] = newWidgetOrder.splice(currentIndex, 1);
+      
+      // Insert it one position down
+      const targetIndex = currentIndex + 1;
+      newWidgetOrder.splice(targetIndex, 0, movedWidget);
+      
+      // Update the widget order in context
+      console.log('Moving widget down', { from: currentIndex, to: targetIndex });
+      reorderWidgets(pageId, newWidgetOrder.map(w => w.id));
+    } catch (error) {
+      console.error('Error moving widget down:', error);
     }
   };
 
@@ -150,6 +133,9 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageId, onAddWidget }) => {
 
   // Render each widget with appropriate props
   const renderWidget = (widget: Widget, index: number) => {
+    const isFirstWidget = index === 0;
+    const isLastWidget = index === page.widgets.length - 1;
+    
     return (
       <View
         key={widget.id}
@@ -160,8 +146,8 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageId, onAddWidget }) => {
           onRemove={() => handleRemoveWidget(widget.id)}
           onEdit={() => handleEditWidget(widget.id)}
           draggable={true}
-          onDragStart={(dragging) => handleDragStateChange(dragging, widget.id)}
-          onDragEnd={() => handleWidgetDrop(widget.id)}
+          onMoveUp={!isFirstWidget ? () => handleMoveWidgetUp(widget.id) : undefined}
+          onMoveDown={!isLastWidget ? () => handleMoveWidgetDown(widget.id) : undefined}
         />
       </View>
     );
@@ -188,7 +174,6 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageId, onAddWidget }) => {
         <ScrollView
           contentContainerStyle={styles.contentContainer}
           style={styles.content}
-          scrollEnabled={isScrollEnabled}
           showsVerticalScrollIndicator={true}
         >
           {page.widgets.length === 0 ? (

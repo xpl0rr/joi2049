@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -22,9 +22,19 @@ interface SimpleTodoWidgetProps {
 
 const SimpleTodoWidget: React.FC<SimpleTodoWidgetProps> = ({ items: initialItems, onUpdate }) => {
   const colorScheme = useColorScheme();
-  const [items, setItems] = useState<TodoItem[]>(initialItems);
+  const [items, setItems] = useState<TodoItem[]>(initialItems || []);
   const [text, setText] = useState('');
   const [completedItems, setCompletedItems] = useState<CompletedItem[]>([]);
+  
+  // Update local state when props change (e.g., when loaded from storage)
+  useEffect(() => {
+    console.log('SimpleTodoWidget: initialItems changed', initialItems?.length);
+    
+    // Only update state if the items are different
+    if (JSON.stringify(initialItems) !== JSON.stringify(items)) {
+      setItems(initialItems || []);
+    }
+  }, [initialItems]);
   
   // Path to store completed items
   const completedItemsPath = FileSystem.documentDirectory + 'completed_todos.json';
@@ -59,7 +69,7 @@ const SimpleTodoWidget: React.FC<SimpleTodoWidgetProps> = ({ items: initialItems
     }
   };
 
-  const handleAddTodo = () => {
+  const handleAddTodo = useCallback(() => {
     if (text.trim() === '') return;
 
     const newItem = { 
@@ -72,17 +82,17 @@ const SimpleTodoWidget: React.FC<SimpleTodoWidgetProps> = ({ items: initialItems
     setItems(newItems);
     onUpdate(newItems);
     setText('');
-  };
+  }, [text, items, onUpdate]);
 
-  const toggleTodo = (id: string) => {
+  const toggleTodo = useCallback((id: string) => {
     const newItems = items.map(item =>
       item.id === id ? { ...item, completed: !item.completed } : item
     );
     setItems(newItems);
     onUpdate(newItems);
-  };
+  }, [items, onUpdate]);
 
-  const removeTodo = (id: string) => {
+  const removeTodo = useCallback((id: string) => {
     const itemToRemove = items.find(item => item.id === id);
     if (itemToRemove) {
       // Add to completed items if it was completed
@@ -101,23 +111,28 @@ const SimpleTodoWidget: React.FC<SimpleTodoWidgetProps> = ({ items: initialItems
       setItems(newItems);
       onUpdate(newItems);
     }
-  };
+  }, [items, completedItems, onUpdate]);
 
-  const viewCompletedItems = () => {
-    if (completedItems.length === 0) {
-      Alert.alert("No completed items", "You haven't completed any items yet!");
-    } else {
-      let message = completedItems
-        .map(item => `• ${item.text}`)
-        .join('\n');
-      
-      Alert.alert(
-        "Completed Items",
-        message,
-        [{ text: "OK", onPress: () => console.log("OK Pressed") }]
-      );
+  const viewCompletedItems = useCallback(() => {
+    try {
+      if (completedItems.length === 0) {
+        Alert.alert("No completed items", "You haven't completed any items yet!");
+      } else {
+        let message = completedItems
+          .map(item => `• ${item.text}`)
+          .join('\n');
+        
+        Alert.alert(
+          "Completed Items",
+          message,
+          [{ text: "OK", onPress: () => console.log("OK Pressed") }]
+        );
+      }
+    } catch (error) {
+      console.error('Error viewing completed items:', error);
+      Alert.alert("Error", "Could not view completed items");
     }
-  };
+  }, [completedItems]);
 
   return (
     <View style={styles.container}>
@@ -128,6 +143,7 @@ const SimpleTodoWidget: React.FC<SimpleTodoWidgetProps> = ({ items: initialItems
         <TouchableOpacity 
           style={styles.viewCompletedButton} 
           onPress={viewCompletedItems}
+          activeOpacity={0.7}
         >
           <Text style={styles.viewCompletedText}>
             Completed
@@ -153,7 +169,7 @@ const SimpleTodoWidget: React.FC<SimpleTodoWidgetProps> = ({ items: initialItems
         bounces={false}
         showsVerticalScrollIndicator={true}
         overScrollMode="never">
-        {items.length === 0 ? (
+        {!items || items.length === 0 ? (
           <Text style={styles.emptyText}>
             No tasks yet. Add one above!
           </Text>
@@ -169,6 +185,7 @@ const SimpleTodoWidget: React.FC<SimpleTodoWidgetProps> = ({ items: initialItems
               <TouchableOpacity 
                 style={styles.checkbox}
                 onPress={() => toggleTodo(item.id)}
+                activeOpacity={0.7}
               >
                 <View 
                   style={[
@@ -183,6 +200,7 @@ const SimpleTodoWidget: React.FC<SimpleTodoWidgetProps> = ({ items: initialItems
                   styles.todoText,
                   item.completed && styles.completedText
                 ]}
+                numberOfLines={2}
               >
                 {item.text}
               </Text>
@@ -190,6 +208,7 @@ const SimpleTodoWidget: React.FC<SimpleTodoWidgetProps> = ({ items: initialItems
               <TouchableOpacity 
                 style={styles.deleteButton}
                 onPress={() => removeTodo(item.id)}
+                activeOpacity={0.7}
               >
                 <Text style={styles.deleteButtonText}>✕</Text>
               </TouchableOpacity>

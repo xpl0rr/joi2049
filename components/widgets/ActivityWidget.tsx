@@ -5,12 +5,16 @@ import Svg, { Circle, G } from 'react-native-svg';
 interface ActivityWidgetProps {
   title: string;
   percentage: number;
+  average?: number;
+  metrics?: any[];
   onUpdate: (config: any) => void;
 }
 
 const ActivityWidget: React.FC<ActivityWidgetProps> = ({
   title = 'Track Progress',
   percentage = 66,
+  average = 0,
+  metrics = [],
   onUpdate
 }) => {
   // SVG parameters for the progress circle
@@ -60,8 +64,25 @@ const ActivityWidget: React.FC<ActivityWidgetProps> = ({
           <Text style={styles.percentageText}>
             {percentage.toFixed(0)}%
           </Text>
+          {average > 0 && (
+            <Text style={styles.averageText}>
+              Average: {average.toFixed(0)}%
+            </Text>
+          )}
         </View>
       </View>
+      
+      {/* Display metrics if provided */}
+      {metrics && metrics.length > 0 && (
+        <View style={styles.metricsContainer}>
+          {metrics.map((metric, index) => (
+            <View key={index} style={styles.metricItem}>
+              <Text style={styles.metricLabel}>{metric.label}</Text>
+              <Text style={styles.metricValue}>{metric.value}</Text>
+            </View>
+          ))}
+        </View>
+      )}
     </View>
   );
 };
@@ -100,6 +121,28 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#334155',
     marginBottom: 4,
+  },
+  averageText: {
+    fontSize: 14,
+    color: '#64748B',
+  },
+  metricsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 16,
+  },
+  metricItem: {
+    alignItems: 'center',
+  },
+  metricLabel: {
+    fontSize: 12,
+    color: '#64748B',
+    marginBottom: 4,
+  },
+  metricValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#334155',
   }
 });
 

@@ -6,9 +6,11 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { View, StyleSheet } from 'react-native';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { WidgetProvider } from '@/contexts/WidgetContext';
+import { CustomTabBar } from '@/components/CustomTabBar';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -54,13 +56,38 @@ function RootLayoutNav() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <WidgetProvider>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="+not-found" />
-          </Stack>
-          <StatusBar style="auto" />
+          <View style={styles.container}>
+            <View style={styles.content}>
+              <Stack>
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="+not-found" />
+              </Stack>
+            </View>
+            <View style={styles.tabBarContainer}>
+              <CustomTabBar />
+            </View>
+            <StatusBar style="auto" />
+          </View>
         </ThemeProvider>
       </WidgetProvider>
     </GestureHandlerRootView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    position: 'relative',
+  },
+  content: {
+    flex: 1,
+    marginBottom: 70, // Reduced bottom margin to match smaller tab bar
+  },
+  tabBarContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 999, // Ensure it stays on top
+  },
+});

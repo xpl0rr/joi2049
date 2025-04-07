@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { StyleSheet, Text, View, ScrollView, Pressable, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useWidgets, Page, Widget } from '@/contexts/WidgetContext';
@@ -6,7 +6,6 @@ import WidgetCard from './widgets/WidgetCard';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { IconSymbol } from './ui/IconSymbol';
-import { useDrop } from './hooks/useDrop';
 import ActivityEditForm from './widgets/ActivityEditForm';
 import NotesEditForm from './widgets/NotesEditForm';
 
@@ -17,15 +16,79 @@ interface PageTemplateProps {
 
 const PageTemplate: React.FC<PageTemplateProps> = ({ pageId, onAddWidget }) => {
   const colorScheme = useColorScheme();
-  const { pages, removeWidgetFromPage, updateWidgetConfig } = useWidgets();
+  const { pages, removeWidgetFromPage, updateWidgetConfig, reorderWidgets } = useWidgets();
   const page = pages[pageId];
   const [editingWidget, setEditingWidget] = useState<string | null>(null);
   const [isScrollEnabled, setIsScrollEnabled] = useState(true);
+  const [isDragging, setIsDragging] = useState(false);
+  const [draggingWidget, setDraggingWidget] = useState<string | null>(null);
+  const dragTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Logic for receiving dropped widgets would go here
-  const handleDrop = (widgetId: string, position: { x: number; y: number }) => {
-    // This would handle widgets being dragged in from other pages
-    console.log('Dropped widget', widgetId, 'at', position);
+  // Function to handle the dragging state change with debounce to avoid false positives
+  const handleDragStateChange = (isDragging: boolean, widgetId?: string) => {
+    // Clear any existing timeout
+    if (dragTimeoutRef.current) {
+      clearTimeout(dragTimeoutRef.current);
+      dragTimeoutRef.current = null;
+    }
+
+    if (isDragging) {
+      // Immediately disable scroll when dragging starts
+      setIsScrollEnabled(false);
+      setIsDragging(true);
+      if (widgetId) {
+        setDraggingWidget(widgetId);
+      }
+    } else {
+      // Use a slight delay before enabling scroll again to avoid conflicts
+      dragTimeoutRef.current = setTimeout(() => {
+        setIsScrollEnabled(true);
+        setIsDragging(false);
+        setDraggingWidget(null);
+        dragTimeoutRef.current = null;
+      }, 300);
+    }
+  };
+
+  // Clean up timeout on unmount
+  React.useEffect(() => {
+    return () => {
+      if (dragTimeoutRef.current) {
+        clearTimeout(dragTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Handle when a widget is dropped - moves it up one position
+  const handleWidgetDrop = (widgetId: string) => {
+    if (!widgetId || !page) return;
+    
+    try {
+      // Find the current index of the dragged widget
+      const currentIndex = page.widgets.findIndex(w => w.id === widgetId);
+      if (currentIndex === -1 || page.widgets.length <= 1) return;
+
+      // Create a new widget order
+      const newWidgetOrder = [...page.widgets];
+      
+      // Remove the widget from its current position
+      const [movedWidget] = newWidgetOrder.splice(currentIndex, 1);
+      
+      // Move the widget one position up (if not already at the top)
+      const targetIndex = Math.max(0, currentIndex - 1);
+      
+      // Insert it at the target position
+      newWidgetOrder.splice(targetIndex, 0, movedWidget);
+      
+      // Update the widget order in context
+      console.log('Moving widget up', { from: currentIndex, to: targetIndex });
+      reorderWidgets(pageId, newWidgetOrder.map(w => w.id));
+    } catch (error) {
+      console.error('Error during widget drop handling:', error);
+    } finally {
+      // Always ensure we reset the dragging state
+      handleDragStateChange(false);
+    }
   };
 
   const handleRemoveWidget = (widgetId: string) => {
@@ -36,7 +99,7 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageId, onAddWidget }) => {
     setEditingWidget(widgetId);
   };
 
-  // Add a function to render the appropriate edit form based on widget type
+  // Render the appropriate edit form based on widget type
   const renderEditForm = () => {
     if (!editingWidget) return null;
     
@@ -66,7 +129,6 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageId, onAddWidget }) => {
             onCancel={() => setEditingWidget(null)}
           />
         );
-      // Add cases for other widget types as needed
       default:
         return (
           <Text style={{ color: '#64748B', textAlign: 'center' }}>
@@ -74,11 +136,6 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageId, onAddWidget }) => {
           </Text>
         );
     }
-  };
-
-  // This would be called when a drag operation starts/ends
-  const handleDragStateChange = (isDragging: boolean) => {
-    setIsScrollEnabled(!isDragging);
   };
 
   if (!page) {
@@ -91,10 +148,24 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageId, onAddWidget }) => {
     );
   }
 
-  // Group widgets by size to optimize layout
-  const smallWidgets = page.widgets.filter(w => w.size === 'small');
-  const mediumWidgets = page.widgets.filter(w => w.size === 'medium');
-  const largeWidgets = page.widgets.filter(w => w.size === 'large');
+  // Render each widget with appropriate props
+  const renderWidget = (widget: Widget, index: number) => {
+    return (
+      <View
+        key={widget.id}
+        style={styles.widgetWrapper}
+      >
+        <WidgetCard
+          widget={widget}
+          onRemove={() => handleRemoveWidget(widget.id)}
+          onEdit={() => handleEditWidget(widget.id)}
+          draggable={true}
+          onDragStart={(dragging) => handleDragStateChange(dragging, widget.id)}
+          onDragEnd={() => handleWidgetDrop(widget.id)}
+        />
+      </View>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -114,87 +185,32 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageId, onAddWidget }) => {
           )}
         </View>
 
-        <ScrollView 
-          style={styles.content} 
+        <ScrollView
           contentContainerStyle={styles.contentContainer}
-          scrollEnabled={true}
+          style={styles.content}
+          scrollEnabled={isScrollEnabled}
           showsVerticalScrollIndicator={true}
-          scrollEventThrottle={16}
-          onTouchStart={(e) => {
-            // We simply ensure scrolling is enabled when user touches the screen
-            setIsScrollEnabled(true);
-          }}
-          // Disable all fancy props that might be causing conflicts
-          overScrollMode="auto"
-          bounces={true}
-          simultaneousHandlers={null}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
-          removeClippedSubviews={false}>
+        >
           {page.widgets.length === 0 ? (
             <View style={styles.emptyState}>
               <IconSymbol name="square.grid.2x2" size={48} color="#94A3B8" />
               <Text style={styles.emptyText}>
-                No widgets added to this page yet
+                No widgets on this page yet.{'\n'}
+                Add widgets from the widget store.
               </Text>
               {onAddWidget && (
                 <Pressable
                   style={styles.emptyAddButton}
                   onPress={onAddWidget}
                 >
-                  <Text style={styles.emptyAddButtonText}>Add Your First Widget</Text>
+                  <Text style={styles.emptyAddButtonText}>Add Widget</Text>
                 </Pressable>
               )}
             </View>
           ) : (
             <View style={styles.widgetsContainer}>
-              {/* Large widgets - full width */}
-              {largeWidgets.length > 0 && (
-                <View style={styles.widgetSection}>
-                  {largeWidgets.map(widget => (
-                    <WidgetCard
-                      key={widget.id}
-                      widget={widget}
-                      onRemove={() => handleRemoveWidget(widget.id)}
-                      onEdit={() => handleEditWidget(widget.id)}
-                      draggable={false}
-                    />
-                  ))}
-                </View>
-              )}
-
-              {/* Medium widgets - full width */}
-              {mediumWidgets.length > 0 && (
-                <View style={[styles.widgetSection, {marginBottom: 20}]}>
-                  {mediumWidgets.map(widget => (
-                    <WidgetCard
-                      key={widget.id}
-                      widget={widget}
-                      onRemove={() => handleRemoveWidget(widget.id)}
-                      onEdit={() => handleEditWidget(widget.id)}
-                      draggable={false}
-                    />
-                  ))}
-                </View>
-              )}
-
-              {mediumWidgets.length > 0 && smallWidgets.length > 0 && (
-                <View style={styles.widgetSeparator} />
-              )}
-
-              {/* Small widgets - single column layout for simplicity */}
-              {smallWidgets.length > 0 && (
-                <View style={styles.widgetSection}>
-                  {smallWidgets.map(widget => (
-                    <WidgetCard
-                      key={widget.id}
-                      widget={widget}
-                      onRemove={() => handleRemoveWidget(widget.id)}
-                      onEdit={() => handleEditWidget(widget.id)}
-                      draggable={false}
-                    />
-                  ))}
-                </View>
+              {page.widgets.map((widget, index) => 
+                renderWidget(widget, index)
               )}
             </View>
           )}
@@ -202,31 +218,28 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageId, onAddWidget }) => {
           <View style={styles.bottomPadding} />
         </ScrollView>
 
-        {/* Widget Editor Modal would go here */}
+        {/* Widget Editor Modal */}
         {editingWidget && (
-          <Pressable
-            style={styles.editOverlay}
-            onPress={() => setEditingWidget(null)}
-          >
-            <View
-              style={[styles.editModal, { backgroundColor: '#FFFFFF' }]}
-            >
-              <Text style={[styles.editTitle, { color: '#334155' }]}>
+          <View style={styles.editOverlay}>
+            <View style={styles.editModal}>
+              <Text style={styles.editTitle}>
                 Edit Widget
               </Text>
-              <Pressable style={styles.closeEditor} onPress={() => setEditingWidget(null)}>
-                <IconSymbol name="xmark.circle.fill" size={24} color="#334155" />
+              <Pressable
+                style={styles.closeEditor}
+                onPress={() => setEditingWidget(null)}
+              >
+                <IconSymbol name="xmark.circle.fill" size={24} color="#94A3B8" />
               </Pressable>
+              
               <ScrollView 
                 style={styles.editScrollView}
-                showsVerticalScrollIndicator={true}
-                nestedScrollEnabled={true}
                 contentContainerStyle={styles.editScrollContent}
               >
                 {renderEditForm()}
               </ScrollView>
             </View>
-          </Pressable>
+          </View>
         )}
       </View>
     </SafeAreaView>
@@ -312,13 +325,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#EF4444',
   },
-  widgetSection: {
+  widgetWrapper: {
     marginBottom: 16,
-    gap: 16,
-  },
-  widgetSeparator: {
-    height: 12,
-    width: '100%',
+    borderRadius: 12,
   },
   editOverlay: {
     position: 'absolute',

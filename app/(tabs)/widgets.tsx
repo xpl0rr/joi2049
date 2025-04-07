@@ -8,7 +8,7 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import TabManager from '@/components/TabManager';
 
-export default function WidgetsStore() {
+export default function Settings() {
   const colorScheme = useColorScheme();
   const { availableWidgets, pages, addWidgetToPage } = useWidgets();
   const [selectedPageId, setSelectedPageId] = React.useState<string | null>(null);
@@ -16,7 +16,14 @@ export default function WidgetsStore() {
 
   const handleAddWidget = (widget: Widget) => {
     if (selectedPageId) {
-      addWidgetToPage(selectedPageId, widget);
+      // Create a unique ID for the widget instance
+      const uniqueId = `${widget.id}-${Date.now()}`;
+      const widgetInstance = {
+        ...widget,
+        id: uniqueId
+      };
+      
+      addWidgetToPage(selectedPageId, widgetInstance);
       setShowPageSelector(false);
     } else {
       setShowPageSelector(true);
@@ -34,21 +41,18 @@ export default function WidgetsStore() {
   }, {} as Record<string, Widget[]>);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>
-            Widget Store
+            Settings
           </Text>
           {selectedPageId && (
-            <Pressable
-              onPress={() => setSelectedPageId(null)}
-              style={styles.selectedPage}
-            >
+            <Pressable style={styles.selectedPage} onPress={() => setSelectedPageId(null)}>
               <Text style={styles.selectedPageText}>
-                Adding to: {pages[selectedPageId].name}
+                {pages[selectedPageId]?.name}
               </Text>
-              <IconSymbol name="xmark.circle.fill" size={16} color="#4D82F3" />
+              <IconSymbol name="xmark" size={14} color="#4D82F3" />
             </Pressable>
           )}
         </View>

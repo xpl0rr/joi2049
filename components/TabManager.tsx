@@ -2,18 +2,47 @@ import React, { useState } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { useWidgets } from '@/contexts/WidgetContext';
 import { IconSymbol } from './ui/IconSymbol';
+import { router } from 'expo-router';
 
 const TabManager: React.FC = () => {
-  const { pages, createPage, removePage } = useWidgets();
+  const { pages, addPage, removePage } = useWidgets();
   const [newTabName, setNewTabName] = useState('');
 
   const handleAddTab = () => {
     if (!newTabName.trim()) {
+      console.log('Tab name is empty, not creating tab');
       return;
     }
 
-    createPage(newTabName.trim());
-    setNewTabName('');
+    try {
+      let pageId = newTabName.trim().toLowerCase().replace(/\s+/g, '-');
+      
+      // If a page with this ID already exists, make it unique by adding a timestamp
+      if (pages[pageId]) {
+        console.log(`Tab with ID ${pageId} already exists, making it unique`);
+        pageId = `${pageId}-${Date.now()}`;
+      }
+
+      console.log(`Creating new tab: ${newTabName} with ID: ${pageId}`);
+      
+      // Create the new tab
+      addPage({
+        id: pageId,
+        name: newTabName.trim(),
+        customizable: true,
+        widgets: []
+      });
+      
+      console.log('Tab created successfully');
+      setNewTabName('');
+      
+      // Navigate to the newly created tab to show it immediately
+      setTimeout(() => {
+        router.push(`/custom/${pageId}`);
+      }, 100);
+    } catch (error) {
+      console.error('Error creating tab:', error);
+    }
   };
 
   const handleRemoveTab = (pageId: string, pageName: string) => {
@@ -22,7 +51,15 @@ const TabManager: React.FC = () => {
       `Are you sure you want to remove the "${pageName}" tab?`,
       [
         { text: "Cancel", style: "cancel" },
-        { text: "Remove", onPress: () => removePage(pageId), style: "destructive" }
+        { 
+          text: "Remove", 
+          onPress: () => {
+            // If we're currently on this tab, navigate to the dashboard first
+            removePage(pageId);
+            router.replace('/');
+          }, 
+          style: "destructive" 
+        }
       ]
     );
   };

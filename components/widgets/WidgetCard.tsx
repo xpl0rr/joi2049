@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, Text, Pressable } from 'react-native';
-import { PanGestureHandler } from 'react-native-gesture-handler';
 import Animated, {
-  useAnimatedGestureHandler,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -20,7 +18,7 @@ interface WidgetCardProps {
   onRemove?: () => void;
   onEdit?: () => void;
   draggable?: boolean;
-  onDragEnd?: (position: { x: number; y: number }) => void;
+  onDragEnd?: () => void;
   onDragStart?: (isDragging: boolean) => void;
 }
 
@@ -33,8 +31,11 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
   onDragStart
 }) => {
   const colorScheme = useColorScheme();
-  const [isEditing, setIsEditing] = useState(false);
   const { updateWidgetConfig, pages } = useWidgets();
+  const [isDragging, setIsDragging] = useState(false);
+  
+  // Animated values for visual feedback
+  const scale = useSharedValue(1);
 
   // Find which page this widget belongs to
   const findPageId = () => {
@@ -51,15 +52,13 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
   // Handle widget config updates
   const handleUpdateConfig = (newConfig: any) => {
     if (pageId) {
+      console.log('Updating widget config:', { pageId, widgetId: widget.id, newConfig });
       updateWidgetConfig(pageId, widget.id, newConfig);
+    } else {
+      console.error('Cannot update widget config: pageId not found for widget', widget.id);
     }
   };
-
-  // Animated values for dragging
-  const translateX = useSharedValue(0);
-  const translateY = useSharedValue(0);
-  const scale = useSharedValue(1);
-
+  
   // Widget size styles
   const sizeStyles = {
     small: { width: '100%', height: 130 },
@@ -70,35 +69,36 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
   // Use standard styles for all widgets
   const widgetStyles = sizeStyles[widget.size];
 
-  // Handle gesture for dragging
-  const gestureHandler = useAnimatedGestureHandler({
-    onStart: () => {
-      scale.value = withSpring(1.05);
-      onDragStart?.(true);
-    },
-    onActive: (event) => {
-      translateX.value = event.translationX;
-      translateY.value = event.translationY;
-    },
-    onEnd: (event) => {
-      if (onDragEnd) {
-        onDragEnd({ x: translateX.value, y: translateY.value });
-      }
-      
-      translateX.value = withSpring(0);
-      translateY.value = withSpring(0);
-      scale.value = withSpring(1);
-      onDragStart?.(false);
-    },
-  });
+  // Handle drag start
+  const handleDragStart = () => {
+    if (!draggable) return;
+    
+    setIsDragging(true);
+    scale.value = withSpring(1.05);
+    if (onDragStart) {
+      onDragStart(true);
+    }
+  };
+  
+  // Handle drag end
+  const handleDragEnd = () => {
+    if (!isDragging) return;
+    
+    setIsDragging(false);
+    scale.value = withSpring(1);
+    
+    if (onDragEnd) {
+      onDragEnd();
+    }
+    
+    if (onDragStart) {
+      onDragStart(false);
+    }
+  };
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [
-        { translateX: translateX.value },
-        { translateY: translateY.value },
-        { scale: scale.value },
-      ],
+      transform: [{ scale: scale.value }],
     };
   });
 
@@ -118,9 +118,13 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
     switch(widget.type) {
       case 'todo':
       case 'simpletodo':
+        console.log('Rendering SimpleTodoWidget with items:', widget.config.items?.length || 0);
         return <SimpleTodoWidget 
           items={widget.config.items || []} 
-          onUpdate={(items) => handleUpdateConfig({...widget.config, items})} 
+          onUpdate={(items) => {
+            console.log('Todo items updated, saving:', items.length);
+            handleUpdateConfig({...widget.config, items});
+          }} 
         />;
       case 'notes':
         return <NotesWidget 
@@ -130,10 +134,7 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
       case 'activity':
         return <ActivityWidget
           title={widget.config.title || 'Daily Activity'}
-          subtitle={widget.config.subtitle || 'How active is your site today?'}
           percentage={widget.config.percentage || 0}
-          average={widget.config.average || 0}
-          metrics={widget.config.metrics || []}
           onUpdate={(config) => handleUpdateConfig({...widget.config, ...config})}
         />;
       default:
@@ -145,14 +146,20 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
     }
   };
 
-  const WidgetContent = () => {
-    return (
-      <View style={[
-        styles.container, 
-        { backgroundColor: '#FFFFFF' },
-        widgetStyles
-      ]}>
-        <View style={styles.header}>
+  return (
+    <Animated.View style={[animatedStyle, { width: '100%' }]}>
+      <View 
+        style={[
+          styles.container, 
+          { backgroundColor: '#FFFFFF' },
+          widgetStyles,
+          isDragging && styles.draggingContainer
+        ]}>
+        <Pressable 
+          style={styles.header}
+          onLongPress={draggable ? handleDragStart : undefined}
+          onPress={isDragging ? handleDragEnd : undefined}
+          delayLongPress={300}>
           <View style={styles.titleContainer}>
             <IconSymbol name={getTypeIcon()} size={22} color={Colors[colorScheme ?? 'light'].tint} />
             <Text style={[styles.title, { color: Colors[colorScheme ?? 'light'].text }]}>
@@ -160,39 +167,29 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
             </Text>
           </View>
           <View style={styles.actions}>
-            {onEdit && (
+            {onEdit && !isDragging && (
               <Pressable onPress={onEdit} style={styles.iconButton}>
                 <IconSymbol name="pencil" size={16} color={Colors[colorScheme ?? 'light'].textSecondary} />
               </Pressable>
             )}
-            {onRemove && (
+            {onRemove && !isDragging && (
               <Pressable onPress={onRemove} style={styles.iconButton}>
                 <IconSymbol name="xmark" size={16} color={Colors[colorScheme ?? 'light'].textSecondary} />
               </Pressable>
             )}
+            {isDragging && (
+              <Pressable onPress={handleDragEnd} style={styles.iconButton}>
+                <IconSymbol name="checkmark" size={16} color="#10B981" />
+              </Pressable>
+            )}
           </View>
-        </View>
+        </Pressable>
         <View style={styles.content}>
           {renderWidgetContent()}
         </View>
       </View>
-    );
-  };
-
-  if (draggable) {
-    return (
-      <PanGestureHandler 
-        onGestureEvent={gestureHandler}
-        // We'll use only one of activeOffsetX or activeOffsetY to avoid conflicts
-        activeOffsetX={[-20, 20]}>
-        <Animated.View style={animatedStyle}>
-          <WidgetContent />
-        </Animated.View>
-      </PanGestureHandler>
-    );
-  }
-
-  return <WidgetContent />;
+    </Animated.View>
+  );
 };
 
 const styles = StyleSheet.create({
@@ -208,11 +205,21 @@ const styles = StyleSheet.create({
     elevation: 2,
     overflow: 'hidden',
   },
+  draggingContainer: {
+    borderWidth: 2,
+    borderColor: '#4D82F3',
+    shadowColor: '#4D82F3',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 5,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
+    paddingVertical: 4,
   },
   titleContainer: {
     flexDirection: 'row',

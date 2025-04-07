@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // Define the widget data structure
 export interface Widget {
   id: string;
-  type: 'todo' | 'simpletodo' | 'notes' | 'activity';
+  type: 'todo' | 'simpletodo' | 'notes' | 'activity' | 'calendar' | 'chart';
   title: string;
   config: any;
   size: 'small' | 'medium' | 'large';
@@ -62,6 +62,39 @@ const defaultWidgets: Widget[] = [
       percentage: 66
     }, 
     size: 'medium' 
+  },
+  {
+    id: 'calendar',
+    type: 'calendar',
+    title: 'Calendar',
+    config: {
+      events: [],
+      view: 'month',
+      selectedDate: new Date().toISOString()
+    },
+    size: 'medium'
+  },
+  {
+    id: 'chart',
+    type: 'chart',
+    title: 'Monthly Sales',
+    config: {
+      data: [
+        { label: 'Jan', value: 150 },
+        { label: 'Feb', value: 360 },
+        { label: 'Mar', value: 180 },
+        { label: 'Apr', value: 280 },
+        { label: 'May', value: 170 },
+        { label: 'Jun', value: 180 },
+        { label: 'Jul', value: 270 },
+        { label: 'Aug', value: 90 },
+        { label: 'Sep', value: 190 },
+        { label: 'Oct', value: 370 },
+        { label: 'Nov', value: 260 },
+        { label: 'Dec', value: 100 },
+      ]
+    },
+    size: 'medium'
   },
 ];
 

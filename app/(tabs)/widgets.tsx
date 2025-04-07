@@ -1,5 +1,5 @@
-import React from 'react';
-import { StyleSheet, Text, View, ScrollView, Pressable } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, Text, View, ScrollView, Pressable, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useWidgets, Widget } from '@/contexts/WidgetContext';
 import WidgetCard from '@/components/widgets/WidgetCard';
@@ -11,11 +11,17 @@ import TabManager from '@/components/TabManager';
 export default function Settings() {
   const colorScheme = useColorScheme();
   const { availableWidgets, pages, addWidgetToPage } = useWidgets();
-  const [selectedPageId, setSelectedPageId] = React.useState<string | null>(null);
-  const [showPageSelector, setShowPageSelector] = React.useState(false);
+  const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
+  const [showPageSelector, setShowPageSelector] = useState(false);
+  const [isAddingWidget, setIsAddingWidget] = useState(false);
+  const [addingWidgetType, setAddingWidgetType] = useState<string | null>(null);
 
   const handleAddWidget = (widget: Widget) => {
     if (selectedPageId) {
+      // Set loading state
+      setIsAddingWidget(true);
+      setAddingWidgetType(widget.type);
+      
       // Create a unique ID for the widget instance
       const uniqueId = `${widget.id}-${Date.now()}`;
       const widgetInstance = {
@@ -23,8 +29,13 @@ export default function Settings() {
         id: uniqueId
       };
       
-      addWidgetToPage(selectedPageId, widgetInstance);
-      setShowPageSelector(false);
+      // Add widget with a small delay to show the loading indicator
+      setTimeout(() => {
+        addWidgetToPage(selectedPageId, widgetInstance);
+        setIsAddingWidget(false);
+        setAddingWidgetType(null);
+        setShowPageSelector(false);
+      }, 800); // Short delay to show loading state
     } else {
       setShowPageSelector(true);
     }
@@ -87,21 +98,39 @@ export default function Settings() {
             </View>
           )}
 
+          {isAddingWidget && (
+            <View style={styles.loadingOverlay}>
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#4D82F3" />
+                <Text style={styles.loadingText}>
+                  Adding {addingWidgetType} widget...
+                </Text>
+              </View>
+            </View>
+          )}
+
           {Object.entries(widgetsByType).map(([type, widgets]) => (
             <View key={type} style={styles.section}>
-              <Text style={styles.sectionTitle}>
-                {type.charAt(0).toUpperCase() + type.slice(1)} Widgets
-              </Text>
               <View style={styles.widgetGrid}>
                 {widgets.map((widget) => (
                   <View key={widget.id} style={styles.widgetContainer}>
                     <WidgetCard widget={widget} />
                     <Pressable
-                      style={styles.addButton}
-                      onPress={() => handleAddWidget(widget)}
+                      style={[
+                        styles.addButton,
+                        (isAddingWidget && addingWidgetType === widget.type) && styles.addButtonDisabled
+                      ]}
+                      onPress={() => !isAddingWidget && handleAddWidget(widget)}
+                      disabled={isAddingWidget}
                     >
-                      <IconSymbol name="plus" size={16} color="#FFFFFF" />
-                      <Text style={styles.addButtonText}>Add to Page</Text>
+                      {isAddingWidget && addingWidgetType === widget.type ? (
+                        <ActivityIndicator size="small" color="#FFFFFF" />
+                      ) : (
+                        <>
+                          <IconSymbol name="plus" size={16} color="#FFFFFF" />
+                          <Text style={styles.addButtonText}>Add to Page</Text>
+                        </>
+                      )}
                     </Pressable>
                   </View>
                 ))}
@@ -137,93 +166,116 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#111827',
   },
-  selectedPage: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#EEF2FF',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  selectedPageText: {
-    marginRight: 6,
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#4D82F3',
-  },
   content: {
     flex: 1,
-    padding: 16,
+    padding: 20,
   },
   section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#64748B',
-    marginBottom: 12,
-  },
-  widgetGrid: {
-    padding: 8,
-  },
-  widgetContainer: {
     marginBottom: 16,
   },
-  addButton: {
+  widgetGrid: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 8,
-    borderRadius: 8,
-    marginHorizontal: 8,
-    marginTop: 8,
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  widgetContainer: {
+    width: '100%',
+    marginBottom: 24,
+  },
+  addButton: {
+    marginTop: 12,
     backgroundColor: '#4D82F3',
+    paddingVertical: 10,
+    borderRadius: 8,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  addButtonDisabled: {
+    backgroundColor: '#94A3B8',
   },
   addButtonText: {
     color: '#FFFFFF',
-    fontSize: 14,
+    marginLeft: 6,
     fontWeight: '500',
-    marginLeft: 4,
+  },
+  selectedPage: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EBF5FF',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  selectedPageText: {
+    color: '#4D82F3',
+    marginRight: 6,
+    fontWeight: '500',
   },
   pageSelector: {
-    borderRadius: 12,
+    marginBottom: 24,
     padding: 16,
-    marginBottom: 16,
     backgroundColor: '#FFFFFF',
-    shadowColor: '#E2E8F0',
+    borderRadius: 12,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 2,
+    elevation: 3,
+    position: 'relative',
   },
   pageSelectorTitle: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 12,
     color: '#334155',
+    marginBottom: 12,
   },
   pageList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 8,
+    gap: 8,
   },
   pageItem: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    padding: 12,
     borderRadius: 8,
-    marginRight: 8,
-    marginBottom: 8,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#F3F4F6',
   },
   pageItemText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#334155',
+    color: '#1F2937',
   },
   closePageSelector: {
     position: 'absolute',
     top: 12,
     right: 12,
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  loadingContainer: {
+    backgroundColor: '#FFFFFF',
+    padding: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    width: '80%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  loadingText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#334155',
+    marginTop: 16,
+    textTransform: 'capitalize',
   },
 }); 

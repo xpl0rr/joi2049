@@ -12,6 +12,8 @@ import { Widget, useWidgets } from '@/contexts/WidgetContext';
 import NotesWidget from './NotesWidget';
 import SimpleTodoWidget from './SimpleTodoWidget';
 import ActivityWidget from './ActivityWidget';
+import CalendarWidget from './CalendarWidget';
+import ChartWidget from './ChartWidget';
 
 interface WidgetCardProps {
   widget: Widget;
@@ -81,6 +83,8 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
       case 'simpletodo': return 'list.bullet';
       case 'notes': return 'note.text';
       case 'activity': return 'chart.bar.fill';
+      case 'calendar': return 'calendar';
+      case 'chart': return 'chart.bar';
       default: return 'square.grid.2x2.fill';
     }
   };
@@ -107,6 +111,17 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
         return <ActivityWidget
           title={widget.config.title || 'Daily Activity'}
           percentage={widget.config.percentage || 0}
+          onUpdate={(config) => handleUpdateConfig({...widget.config, ...config})}
+        />;
+      case 'calendar':
+        return <CalendarWidget
+          events={widget.config.events || []}
+          onUpdate={(config) => handleUpdateConfig({...widget.config, ...config})}
+        />;
+      case 'chart':
+        return <ChartWidget
+          title={widget.config.title || 'Monthly Sales'}
+          data={widget.config.data || []}
           onUpdate={(config) => handleUpdateConfig({...widget.config, ...config})}
         />;
       default:

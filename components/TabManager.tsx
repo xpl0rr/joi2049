@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { useWidgets } from '@/contexts/WidgetContext';
 import { IconSymbol } from './ui/IconSymbol';
 import { router } from 'expo-router';
@@ -83,11 +83,7 @@ const TabManager: React.FC = () => {
         </TouchableOpacity>
       </View>
       
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.tabsContainer}
-      >
+      <View style={styles.tabsGrid}>
         {Object.values(pages).map(page => (
           <View key={page.id} style={styles.tabItem}>
             <Text style={styles.tabName}>{page.name}</Text>
@@ -101,7 +97,7 @@ const TabManager: React.FC = () => {
             )}
           </View>
         ))}
-      </ScrollView>
+      </View>
     </View>
   );
 };
@@ -143,8 +139,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  tabsContainer: {
-    paddingVertical: 4,
+  tabsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
   },
   tabItem: {
@@ -154,7 +151,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 8,
-    marginRight: 8,
+    marginBottom: 8,
   },
   tabName: {
     fontSize: 14,

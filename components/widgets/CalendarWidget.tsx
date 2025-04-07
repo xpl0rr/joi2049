@@ -1,8 +1,9 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, FlatList, ActivityIndicator, Modal, TextInput, Alert } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { IconSymbol } from '../ui/IconSymbol';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Days of week abbreviations
 const DAYS_OF_WEEK = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
@@ -15,6 +16,7 @@ const MONTHS = [
 interface CalendarWidgetProps {
   events?: CalendarEvent[];
   onUpdate: (config: any) => void;
+  onEdit?: () => void;
 }
 
 interface CalendarEvent {
@@ -22,6 +24,7 @@ interface CalendarEvent {
   date: string; // ISO date string
   title: string;
   type?: 'normal' | 'important';
+  note?: string;
 }
 
 interface CalendarConfig {
@@ -30,9 +33,20 @@ interface CalendarConfig {
   selectedDate: string;
 }
 
+interface DayInfo {
+  day: number;
+  date: Date;
+  isToday: boolean;
+  hasEvents: boolean;
+  hasNote: boolean;
+}
+
+const STORAGE_KEY = 'joiapp_calendar_notes';
+
 const CalendarWidget: React.FC<CalendarWidgetProps> = ({ 
   events = [], 
-  onUpdate 
+  onUpdate,
+  onEdit
 }) => {
   const colorScheme = useColorScheme();
   const today = new Date();
@@ -42,15 +56,52 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [view, setView] = useState<'month' | 'year'>('month');
   const [isLoading, setIsLoading] = useState(true);
+  const [calendarNotes, setCalendarNotes] = useState<Record<string, string>>({});
+  
+  // Modal state for adding notes
+  const [noteModalVisible, setNoteModalVisible] = useState(false);
+  const [currentNote, setCurrentNote] = useState('');
+  const [selectedDateForNote, setSelectedDateForNote] = useState<Date | null>(null);
+  const [noteViewModalVisible, setNoteViewModalVisible] = useState(false);
+  const [viewingNote, setViewingNote] = useState('');
 
-  // Show loading state briefly when first mounted
+  // Load saved notes
   useEffect(() => {
-    const loadingTimeout = setTimeout(() => {
+    const loadCalendarNotes = async () => {
+      try {
+        const savedNotes = await AsyncStorage.getItem(STORAGE_KEY);
+        if (savedNotes) {
+          setCalendarNotes(JSON.parse(savedNotes));
+        }
+      } catch (error) {
+        console.error('Failed to load calendar notes:', error);
+      }
       setIsLoading(false);
-    }, 800); // Short loading time to give feedback
+    };
     
-    return () => clearTimeout(loadingTimeout);
+    loadCalendarNotes();
   }, []);
+
+  // Save notes when updated
+  useEffect(() => {
+    const saveCalendarNotes = async () => {
+      try {
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(calendarNotes));
+      } catch (error) {
+        console.error('Failed to save calendar notes:', error);
+      }
+    };
+    
+    // Only save if calendarNotes is not empty (skip initial load)
+    if (Object.keys(calendarNotes).length > 0) {
+      saveCalendarNotes();
+    }
+  }, [calendarNotes]);
+
+  // Format date to string key for storage
+  const formatDateKey = (date: Date) => {
+    return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+  };
 
   // Generate days for the current month
   const generateDaysForMonth = useCallback((month: number, year: number) => {
@@ -64,9 +115,12 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
     
     // Add the days of the current month
     for (let i = 1; i <= daysInMonth; i++) {
+      const currentDate = new Date(year, month, i);
+      const dateKey = formatDateKey(currentDate);
+      
       days.push({
         day: i,
-        date: new Date(year, month, i),
+        date: currentDate,
         isToday: today.getDate() === i && 
                 today.getMonth() === month && 
                 today.getFullYear() === year,
@@ -75,12 +129,13 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
           return eventDate.getDate() === i && 
                  eventDate.getMonth() === month && 
                  eventDate.getFullYear() === year;
-        })
+        }),
+        hasNote: !!calendarNotes[dateKey]
       });
     }
     
     return days;
-  }, [events, today]);
+  }, [events, today, calendarNotes]);
   
   // Move to previous month
   const goToPreviousMonth = useCallback(() => {
@@ -117,15 +172,21 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
   
   // Handle day selection
   const selectDay = useCallback((date: Date) => {
-    setSelectedDate(date.toISOString());
+    // Don't update the selected date visually - just open the note editor
     
-    // Update the parent component with the selected date
+    // Open note editor for the selected date
+    setSelectedDateForNote(date);
+    const dateKey = formatDateKey(date);
+    setCurrentNote(calendarNotes[dateKey] || '');
+    setNoteModalVisible(true);
+    
+    // Still update the config with the selected date
     onUpdate({
       events,
       view,
       selectedDate: date.toISOString()
     });
-  }, [events, view, onUpdate]);
+  }, [events, view, onUpdate, calendarNotes]);
   
   // Handle month selection in year view
   const selectMonth = useCallback((month: number) => {
@@ -139,6 +200,66 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
       selectedDate
     });
   }, [events, selectedDate, onUpdate]);
+  
+  // Handle the edit button press
+  const handleEditPress = useCallback(() => {
+    if (onEdit) {
+      onEdit();
+    }
+    
+    // Prepare for adding a note to the selected date
+    const date = new Date(selectedDate);
+    setSelectedDateForNote(date);
+    
+    // Pre-fill with existing note if exists
+    const dateKey = formatDateKey(date);
+    setCurrentNote(calendarNotes[dateKey] || '');
+    
+    // Show modal
+    setNoteModalVisible(true);
+  }, [selectedDate, calendarNotes, onEdit]);
+
+  // Save the note
+  const saveCalendarNote = useCallback(() => {
+    if (!selectedDateForNote) return;
+    
+    const dateKey = formatDateKey(selectedDateForNote);
+    
+    if (currentNote.trim()) {
+      // Add or update note
+      setCalendarNotes(prev => ({
+        ...prev,
+        [dateKey]: currentNote.trim()
+      }));
+      Alert.alert('Success', 'Note saved!');
+    } else {
+      // Remove note if empty
+      setCalendarNotes(prev => {
+        const newNotes = { ...prev };
+        delete newNotes[dateKey];
+        return newNotes;
+      });
+    }
+    
+    // Close modal
+    setNoteModalVisible(false);
+    setCurrentNote('');
+  }, [selectedDateForNote, currentNote]);
+
+  // Count notes for the current month
+  const getMonthNotesCount = useCallback(() => {
+    let count = 0;
+    
+    for (const dateKey in calendarNotes) {
+      const [year, month, day] = dateKey.split('-').map(Number);
+      
+      if (month - 1 === currentMonth && year === currentYear) {
+        count++;
+      }
+    }
+    
+    return count;
+  }, [calendarNotes, currentMonth, currentYear]);
   
   // Render the month view
   const renderMonthView = () => {
@@ -161,9 +282,7 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
               style={[
                 styles.dayCell,
                 day?.isToday && styles.todayCell,
-                day?.date && new Date(selectedDate).getDate() === day.day && 
-                new Date(selectedDate).getMonth() === currentMonth &&
-                new Date(selectedDate).getFullYear() === currentYear && styles.selectedCell
+                day?.hasNote && styles.noteDateCell
               ]}
               onPress={() => day?.date && selectDay(day.date)}
               disabled={!day?.date}
@@ -173,9 +292,7 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
                   <Text style={[
                     styles.dayText,
                     day.isToday && styles.todayText,
-                    day.date && new Date(selectedDate).getDate() === day.day && 
-                    new Date(selectedDate).getMonth() === currentMonth &&
-                    new Date(selectedDate).getFullYear() === currentYear && styles.selectedText
+                    day.hasNote && styles.noteDateText
                   ]}>
                     {day.day}
                   </Text>
@@ -185,6 +302,10 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
             </TouchableOpacity>
           ))}
         </View>
+        
+        <TouchableOpacity style={styles.addNoteButton} onPress={handleEditPress}>
+          <Text style={styles.addNoteButtonText}>Add Note</Text>
+        </TouchableOpacity>
       </View>
     );
   };
@@ -250,6 +371,47 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
       </View>
       
       {view === 'month' ? renderMonthView() : renderYearView()}
+      
+      {/* Modal for adding notes */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={noteModalVisible}
+        onRequestClose={() => setNoteModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>
+              {selectedDateForNote ? `Note for ${selectedDateForNote.getDate()} ${MONTHS[selectedDateForNote.getMonth()]}` : 'Add Note'}
+            </Text>
+            
+            <TextInput
+              style={styles.noteInput}
+              placeholder="Enter your note here..."
+              value={currentNote}
+              onChangeText={setCurrentNote}
+              multiline
+              numberOfLines={5}
+            />
+            
+            <View style={styles.modalButtons}>
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.cancelButton]} 
+                onPress={() => setNoteModalVisible(false)}
+              >
+                <Text style={styles.buttonText}>Cancel</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.saveButton]} 
+                onPress={saveCalendarNote}
+              >
+                <Text style={[styles.buttonText, styles.saveButtonText]}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -315,6 +477,9 @@ const styles = StyleSheet.create({
   selectedCell: {
     backgroundColor: '#4D82F3',
   },
+  noteDateCell: {
+    backgroundColor: '#4D82F3',
+  },
   dayText: {
     fontSize: 14,
     color: '#334155',
@@ -323,6 +488,10 @@ const styles = StyleSheet.create({
   todayText: {
     fontWeight: '700',
     color: '#4D82F3',
+  },
+  noteDateText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
   },
   selectedText: {
     color: '#FFFFFF',
@@ -334,6 +503,79 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     backgroundColor: '#4D82F3',
     marginTop: 2,
+  },
+  addNoteButton: {
+    backgroundColor: '#4D82F3',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignSelf: 'center',
+    marginTop: 16,
+  },
+  addNoteButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 24,
+    width: '85%',
+    maxHeight: '70%',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  noteInput: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 8,
+    padding: 12,
+    height: 120,
+    textAlignVertical: 'top',
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  modalButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    flex: 1,
+    alignItems: 'center',
+    marginHorizontal: 4,
+  },
+  cancelButton: {
+    backgroundColor: '#F3F4F6',
+  },
+  saveButton: {
+    backgroundColor: '#4D82F3',
+  },
+  closeButton: {
+    backgroundColor: '#4D82F3',
+    marginTop: 16,
+  },
+  buttonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1F2937',
+  },
+  saveButtonText: {
+    color: 'white',
   },
   yearContainer: {
     flex: 1,

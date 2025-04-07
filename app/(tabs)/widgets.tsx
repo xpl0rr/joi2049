@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { StyleSheet, Text, View, ScrollView, Pressable, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useWidgets, Widget } from '@/contexts/WidgetContext';
@@ -15,30 +15,43 @@ export default function Settings() {
   const [showPageSelector, setShowPageSelector] = useState(false);
   const [isAddingWidget, setIsAddingWidget] = useState(false);
   const [addingWidgetType, setAddingWidgetType] = useState<string | null>(null);
+  const [selectedWidget, setSelectedWidget] = useState<Widget | null>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
 
-  const handleAddWidget = (widget: Widget) => {
-    if (selectedPageId) {
-      // Set loading state
-      setIsAddingWidget(true);
-      setAddingWidgetType(widget.type);
-      
-      // Create a unique ID for the widget instance
-      const uniqueId = `${widget.id}-${Date.now()}`;
-      const widgetInstance = {
-        ...widget,
-        id: uniqueId
-      };
-      
-      // Add widget with a small delay to show the loading indicator
-      setTimeout(() => {
-        addWidgetToPage(selectedPageId, widgetInstance);
-        setIsAddingWidget(false);
-        setAddingWidgetType(null);
-        setShowPageSelector(false);
-      }, 800); // Short delay to show loading state
-    } else {
-      setShowPageSelector(true);
-    }
+  const handleAddWidgetButtonPress = (widget: Widget) => {
+    setSelectedWidget(widget);
+    setShowPageSelector(true);
+    
+    // Scroll to the top where the page selector is shown
+    setTimeout(() => {
+      scrollViewRef.current?.scrollTo({
+        y: 0,
+        animated: true,
+      });
+    }, 100);
+  };
+
+  const handleAddWidget = (pageId: string, widget: Widget) => {
+    // Set loading state
+    setIsAddingWidget(true);
+    setAddingWidgetType(widget.type);
+    
+    // Create a unique ID for the widget instance
+    const uniqueId = `${widget.id}-${Date.now()}`;
+    const widgetInstance = {
+      ...widget,
+      id: uniqueId
+    };
+    
+    // Add widget with a small delay to show the loading indicator
+    setTimeout(() => {
+      addWidgetToPage(pageId, widgetInstance);
+      setIsAddingWidget(false);
+      setAddingWidgetType(null);
+      setShowPageSelector(false);
+      setSelectedWidget(null);
+      setSelectedPageId(null);
+    }, 800); // Short delay to show loading state
   };
 
   // Group widgets by type
@@ -68,30 +81,43 @@ export default function Settings() {
           )}
         </View>
 
-        <ScrollView style={styles.content}>
+        <ScrollView 
+          style={styles.content}
+          ref={scrollViewRef}
+        >
           <TabManager />
           
-          {showPageSelector && !selectedPageId && (
+          {showPageSelector && selectedWidget && (
             <View style={styles.pageSelector}>
               <Text style={styles.pageSelectorTitle}>
-                Select a page to add widget
+                Select a page to add {selectedWidget.title}
               </Text>
               <View style={styles.pageList}>
                 {Object.values(pages).map((page) => (
                   <Pressable
                     key={page.id}
-                    style={styles.pageItem}
-                    onPress={() => setSelectedPageId(page.id)}
+                    style={[
+                      styles.pageItem,
+                      isAddingWidget && addingWidgetType === selectedWidget.type && styles.pageItemDisabled
+                    ]}
+                    onPress={() => !isAddingWidget && handleAddWidget(page.id, selectedWidget)}
+                    disabled={isAddingWidget}
                   >
                     <Text style={styles.pageItemText}>
                       {page.name}
                     </Text>
+                    {isAddingWidget && addingWidgetType === selectedWidget.type && (
+                      <ActivityIndicator size="small" color="#4D82F3" style={styles.pageItemLoader} />
+                    )}
                   </Pressable>
                 ))}
               </View>
               <Pressable
                 style={styles.closePageSelector}
-                onPress={() => setShowPageSelector(false)}
+                onPress={() => {
+                  setShowPageSelector(false);
+                  setSelectedWidget(null);
+                }}
               >
                 <IconSymbol name="xmark.circle.fill" size={24} color="#334155" />
               </Pressable>
@@ -120,7 +146,7 @@ export default function Settings() {
                         styles.addButton,
                         (isAddingWidget && addingWidgetType === widget.type) && styles.addButtonDisabled
                       ]}
-                      onPress={() => !isAddingWidget && handleAddWidget(widget)}
+                      onPress={() => !isAddingWidget && handleAddWidgetButtonPress(widget)}
                       disabled={isAddingWidget}
                     >
                       {isAddingWidget && addingWidgetType === widget.type ? (
@@ -214,34 +240,49 @@ const styles = StyleSheet.create({
   },
   pageSelector: {
     marginBottom: 24,
-    padding: 16,
+    padding: 20,
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 8,
+    elevation: 4,
     position: 'relative',
+    borderWidth: 2,
+    borderColor: '#EBF5FF',
   },
   pageSelectorTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
     color: '#334155',
-    marginBottom: 12,
+    marginBottom: 16,
+    textAlign: 'center',
   },
   pageList: {
-    gap: 8,
+    gap: 10,
   },
   pageItem: {
-    padding: 12,
+    padding: 16,
     borderRadius: 8,
     backgroundColor: '#F3F4F6',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  pageItemDisabled: {
+    backgroundColor: '#F3F4F6',
+    opacity: 0.5,
   },
   pageItemText: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '500',
     color: '#1F2937',
+  },
+  pageItemLoader: {
+    marginLeft: 8,
   },
   closePageSelector: {
     position: 'absolute',

@@ -33,7 +33,7 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
   onMoveDown
 }) => {
   const colorScheme = useColorScheme();
-  const { updateWidgetConfig, pages } = useWidgets();
+  const { updateWidgetConfig, pages, toggleWidgetThumbnail } = useWidgets();
   
   // Animated values for visual feedback
   const scale = useSharedValue(1);
@@ -60,6 +60,13 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
     }
   };
   
+  // Handle thumbnail toggle
+  const handleToggleThumbnail = () => {
+    if (pageId) {
+      toggleWidgetThumbnail(pageId, widget.id);
+    }
+  };
+  
   // Widget size styles
   const sizeStyles = {
     small: { width: '100%', height: 130 },
@@ -67,8 +74,11 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
     large: { width: '100%', height: 400 },
   };
   
-  // Use standard styles for all widgets
-  const widgetStyles = sizeStyles[widget.size];
+  // Thumbnail style - approximately 1/2 of screen width
+  const thumbnailStyle = { width: '100%', height: 110 };
+  
+  // Use thumbnail or standard styles based on widget state
+  const widgetStyles = widget.isThumbnail ? thumbnailStyle : sizeStyles[widget.size];
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -91,6 +101,12 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
 
   // Render widget content based on type
   const renderWidgetContent = () => {
+    // If widget is in thumbnail mode, render a simple preview instead
+    if (widget.isThumbnail) {
+      return null; // No content for thumbnail mode, just the header
+    }
+    
+    // Render the full widget content
     switch(widget.type) {
       case 'todo':
       case 'simpletodo':
@@ -117,10 +133,11 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
         return <CalendarWidget
           events={widget.config.events || []}
           onUpdate={(config) => handleUpdateConfig({...widget.config, ...config})}
+          onEdit={onEdit}
         />;
       case 'chart':
         return <ChartWidget
-          title={widget.config.title || 'Monthly Sales'}
+          title={widget.config.title || widget.title || 'Bar Chart'}
           data={widget.config.data || []}
           onUpdate={(config) => handleUpdateConfig({...widget.config, ...config})}
         />;
@@ -139,41 +156,61 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
         style={[
           styles.container, 
           { backgroundColor: '#FFFFFF' },
-          widgetStyles
+          widgetStyles,
+          widget.isThumbnail && styles.thumbnailContainer
         ]}>
-        <View style={styles.header}>
-          <View style={styles.titleContainer}>
-            <IconSymbol name={getTypeIcon()} size={22} color={Colors[colorScheme ?? 'light'].tint} />
-            <Text style={[styles.title, { color: Colors[colorScheme ?? 'light'].text }]}>
+        <View style={[styles.header, widget.isThumbnail && styles.thumbnailHeader]}>
+          <View style={[styles.titleContainer, widget.isThumbnail && styles.thumbnailTitleContainer]}>
+            {!widget.isThumbnail && (
+              <IconSymbol name={getTypeIcon()} size={22} color={Colors[colorScheme ?? 'light'].tint} />
+            )}
+            <Text 
+              style={[
+                styles.title, 
+                { color: Colors[colorScheme ?? 'light'].text },
+                widget.isThumbnail && styles.thumbnailTitleText,
+                !widget.isThumbnail && { marginLeft: 8 }
+              ]}
+              numberOfLines={widget.isThumbnail ? (widget.title.includes(' ') ? 2 : 1) : 1}
+            >
               {widget.title}
             </Text>
           </View>
           <View style={styles.actions}>
-            {draggable && onMoveUp && (
+            {draggable && onMoveUp && !widget.isThumbnail && (
               <Pressable onPress={onMoveUp} style={styles.iconButton}>
                 <IconSymbol name="arrow.up" size={16} color={Colors[colorScheme ?? 'light'].textSecondary} />
               </Pressable>
             )}
-            {draggable && onMoveDown && (
+            {draggable && onMoveDown && !widget.isThumbnail && (
               <Pressable onPress={onMoveDown} style={styles.iconButton}>
                 <IconSymbol name="arrow.down" size={16} color={Colors[colorScheme ?? 'light'].textSecondary} />
               </Pressable>
             )}
-            {onEdit && (
+            <Pressable onPress={handleToggleThumbnail} style={styles.iconButton}>
+              <IconSymbol 
+                name={widget.isThumbnail ? "arrow.up.left.and.arrow.down.right" : "arrow.down.right.and.arrow.up.left"} 
+                size={16} 
+                color={Colors[colorScheme ?? 'light'].textSecondary} 
+              />
+            </Pressable>
+            {onEdit && !widget.isThumbnail && (
               <Pressable onPress={onEdit} style={styles.iconButton}>
                 <IconSymbol name="pencil" size={16} color={Colors[colorScheme ?? 'light'].textSecondary} />
               </Pressable>
             )}
-            {onRemove && (
+            {onRemove && !widget.isThumbnail && (
               <Pressable onPress={onRemove} style={styles.iconButton}>
                 <IconSymbol name="xmark" size={16} color={Colors[colorScheme ?? 'light'].textSecondary} />
               </Pressable>
             )}
           </View>
         </View>
-        <View style={styles.content}>
-          {renderWidgetContent()}
-        </View>
+        {!widget.isThumbnail && (
+          <View style={styles.content}>
+            {renderWidgetContent()}
+          </View>
+        )}
       </View>
     </Animated.View>
   );
@@ -192,6 +229,11 @@ const styles = StyleSheet.create({
     elevation: 2,
     overflow: 'hidden',
   },
+  thumbnailContainer: {
+    justifyContent: 'center',
+    padding: 16,
+    backgroundColor: '#F3F4F6',
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -202,12 +244,24 @@ const styles = StyleSheet.create({
   titleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
+  },
+  thumbnailTitleContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   title: {
     fontSize: 16,
     fontWeight: '600',
-    marginLeft: 8,
     color: '#334155',
+    flex: 1,
+  },
+  thumbnailTitleText: {
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginLeft: 0,
+    color: '#1F2937',
   },
   actions: {
     flexDirection: 'row',
@@ -224,7 +278,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     color: '#64748B',
-  }
+  },
+  // Remove unused styles
+  thumbnailContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+  },
+  thumbnailText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#334155',
+    textAlign: 'center',
+  },
+  thumbnailHeader: {
+    marginBottom: 0,
+    paddingVertical: 0,
+  },
 });
 
 export default WidgetCard; 

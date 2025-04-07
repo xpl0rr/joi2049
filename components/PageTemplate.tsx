@@ -16,66 +16,22 @@ interface PageTemplateProps {
 
 const PageTemplate: React.FC<PageTemplateProps> = ({ pageId, onAddWidget }) => {
   const colorScheme = useColorScheme();
-  const { pages, removeWidgetFromPage, updateWidgetConfig, reorderWidgets } = useWidgets();
+  const { pages, removeWidget, updateWidgetConfig, moveWidgetUp, moveWidgetDown } = useWidgets();
   const page = pages[pageId];
   const [editingWidget, setEditingWidget] = useState<string | null>(null);
 
   // Handle moving a widget up in order
   const handleMoveWidgetUp = (widgetId: string) => {
-    if (!page) return;
-    
-    try {
-      // Find the current index of the widget
-      const currentIndex = page.widgets.findIndex(w => w.id === widgetId);
-      if (currentIndex <= 0 || page.widgets.length <= 1) return; // Already at the top
-      
-      // Create a new widget order
-      const newWidgetOrder = [...page.widgets];
-      
-      // Remove the widget from its current position
-      const [movedWidget] = newWidgetOrder.splice(currentIndex, 1);
-      
-      // Insert it one position up
-      const targetIndex = currentIndex - 1;
-      newWidgetOrder.splice(targetIndex, 0, movedWidget);
-      
-      // Update the widget order in context
-      console.log('Moving widget up', { from: currentIndex, to: targetIndex });
-      reorderWidgets(pageId, newWidgetOrder.map(w => w.id));
-    } catch (error) {
-      console.error('Error moving widget up:', error);
-    }
+    moveWidgetUp(pageId, widgetId);
   };
   
   // Handle moving a widget down in order
   const handleMoveWidgetDown = (widgetId: string) => {
-    if (!page) return;
-    
-    try {
-      // Find the current index of the widget
-      const currentIndex = page.widgets.findIndex(w => w.id === widgetId);
-      if (currentIndex === -1 || currentIndex >= page.widgets.length - 1) return; // Already at the bottom
-      
-      // Create a new widget order
-      const newWidgetOrder = [...page.widgets];
-      
-      // Remove the widget from its current position
-      const [movedWidget] = newWidgetOrder.splice(currentIndex, 1);
-      
-      // Insert it one position down
-      const targetIndex = currentIndex + 1;
-      newWidgetOrder.splice(targetIndex, 0, movedWidget);
-      
-      // Update the widget order in context
-      console.log('Moving widget down', { from: currentIndex, to: targetIndex });
-      reorderWidgets(pageId, newWidgetOrder.map(w => w.id));
-    } catch (error) {
-      console.error('Error moving widget down:', error);
-    }
+    moveWidgetDown(pageId, widgetId);
   };
 
   const handleRemoveWidget = (widgetId: string) => {
-    removeWidgetFromPage(pageId, widgetId);
+    removeWidget(pageId, widgetId);
   };
 
   const handleEditWidget = (widgetId: string) => {
@@ -139,7 +95,10 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageId, onAddWidget }) => {
     return (
       <View
         key={widget.id}
-        style={styles.widgetWrapper}
+        style={[
+          styles.widgetWrapper,
+          widget.isThumbnail && styles.thumbnailWrapper
+        ]}
       >
         <WidgetCard
           widget={widget}
@@ -152,6 +111,24 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageId, onAddWidget }) => {
       </View>
     );
   };
+
+  // Group widgets into full-size and thumbnails
+  const groupWidgets = () => {
+    const thumbnails: Widget[] = [];
+    const fullWidgets: Widget[] = [];
+
+    page.widgets.forEach(widget => {
+      if (widget.isThumbnail) {
+        thumbnails.push(widget);
+      } else {
+        fullWidgets.push(widget);
+      }
+    });
+
+    return { thumbnails, fullWidgets };
+  };
+
+  const { thumbnails, fullWidgets } = groupWidgets();
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -170,11 +147,11 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageId, onAddWidget }) => {
             </Pressable>
           )}
         </View>
-
-        <ScrollView
-          contentContainerStyle={styles.contentContainer}
-          style={styles.content}
-          showsVerticalScrollIndicator={true}
+        
+        <ScrollView 
+          style={styles.scrollContainer}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
         >
           {page.widgets.length === 0 ? (
             <View style={styles.emptyState}>
@@ -193,14 +170,21 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageId, onAddWidget }) => {
               )}
             </View>
           ) : (
-            <View style={styles.widgetsContainer}>
-              {page.widgets.map((widget, index) => 
-                renderWidget(widget, index)
+            <>
+              {/* Thumbnail widgets grid */}
+              {thumbnails.length > 0 && (
+                <View style={styles.thumbnailGrid}>
+                  {thumbnails.map((widget, index) => renderWidget(widget, fullWidgets.length + index))}
+                </View>
               )}
-            </View>
+              
+              {/* Full-size widgets */}
+              {fullWidgets.map((widget, index) => renderWidget(widget, index))}
+              
+              {/* Add some bottom padding to ensure scrolling works properly */}
+              <View style={styles.bottomPadding} />
+            </>
           )}
-          {/* Add some bottom padding to ensure scrolling works properly */}
-          <View style={styles.bottomPadding} />
         </ScrollView>
 
         {/* Widget Editor Modal */}
@@ -312,7 +296,20 @@ const styles = StyleSheet.create({
   },
   widgetWrapper: {
     marginBottom: 16,
-    borderRadius: 12,
+    width: '100%',
+  },
+  thumbnailWrapper: {
+    width: '47%', // Slightly less than half for better spacing
+    marginHorizontal: '1.5%',
+    marginBottom: 16,
+  },
+  thumbnailGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 16,
+    paddingHorizontal: 16,
   },
   editOverlay: {
     position: 'absolute',
@@ -349,17 +346,20 @@ const styles = StyleSheet.create({
     top: 16,
     right: 16,
   },
-  widgetsContainer: {
+  scrollContainer: {
     flex: 1,
   },
-  bottomPadding: {
-    height: 20,
+  scrollContent: {
+    paddingBottom: 16,
   },
   editScrollView: {
     maxHeight: 400,
   },
   editScrollContent: {
     paddingBottom: 20,
+  },
+  bottomPadding: {
+    height: 20,
   },
 });
 

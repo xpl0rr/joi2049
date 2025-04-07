@@ -9,22 +9,24 @@ interface ChartData {
 }
 
 interface ChartWidgetProps {
-  title: string;
+  title?: string;
   data: ChartData[];
   onUpdate: (config: any) => void;
 }
 
 const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTHS_LETTER = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
 
 const ChartWidget: React.FC<ChartWidgetProps> = ({ 
-  title = 'Monthly Sales',
+  title = 'Bar Chart',
   data = [],
   onUpdate 
 }) => {
   const colorScheme = useColorScheme();
   const [isLoading, setIsLoading] = useState(true);
   const [maxValue, setMaxValue] = useState(0);
-  const [chartWidth, setChartWidth] = useState(Dimensions.get('window').width - 80);
+  const [chartWidth, setChartWidth] = useState(Dimensions.get('window').width - 60);
+  const screenWidth = Dimensions.get('window').width;
 
   // Sample data if none is provided
   const defaultData: ChartData[] = [
@@ -62,7 +64,7 @@ const ChartWidget: React.FC<ChartWidgetProps> = ({
   // Function to measure container width
   const onContainerLayout = (event: any) => {
     const { width } = event.nativeEvent.layout;
-    setChartWidth(width - 80); // Adjust for padding/margins
+    setChartWidth(width - 45); // Reduce left margin for more space
   };
 
   if (isLoading) {
@@ -73,9 +75,30 @@ const ChartWidget: React.FC<ChartWidgetProps> = ({
     );
   }
 
-  // Bar width calculation
-  const barWidth = Math.max(25, Math.min(40, (chartWidth / chartData.length) - 10));
-  const barSpacing = (chartWidth - (barWidth * chartData.length)) / (chartData.length - 1);
+  // Calculate optimal bar width for all 12 months to fit without scrolling
+  const getBarWidth = () => {
+    // Make sure we have space for all 12 months
+    const availableWidth = chartWidth - 30; // Account for some padding
+    const minBarSpacing = 3; // Minimum spacing between bars
+    const maxBarWidth = (availableWidth / chartData.length) - minBarSpacing;
+    
+    if (screenWidth < 360) {
+      // For very small screens
+      return Math.min(maxBarWidth, 14); 
+    } else if (screenWidth < 400) {
+      // For medium-small screens
+      return Math.min(maxBarWidth, 16);
+    } else {
+      // For larger screens
+      return Math.min(maxBarWidth, 18);
+    }
+  };
+
+  const barWidth = getBarWidth();
+  // Calculate dynamic spacing - spacing will adjust to fill available width
+  const totalBarsWidth = barWidth * chartData.length;
+  const remainingSpace = chartWidth - totalBarsWidth;
+  const barSpacing = remainingSpace / (chartData.length + 1);
 
   return (
     <View style={styles.container} onLayout={onContainerLayout}>
@@ -89,17 +112,10 @@ const ChartWidget: React.FC<ChartWidgetProps> = ({
         <Text style={styles.yAxisLabel}>0</Text>
       </View>
       
-      <ScrollView 
-        horizontal={chartData.length > 6}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={[
-          styles.chartScrollContent,
-          chartData.length <= 6 && { justifyContent: 'space-around', width: '100%' }
-        ]}
-      >
+      <View style={styles.chartScrollContent}>
         <View style={styles.chartContainer}>
           {chartData.map((item, index) => (
-            <View key={index} style={styles.barContainer}>
+            <View key={index} style={[styles.barContainer, { width: barWidth + barSpacing }]}>
               <View 
                 style={[
                   styles.bar, 
@@ -107,15 +123,14 @@ const ChartWidget: React.FC<ChartWidgetProps> = ({
                     height: `${(item.value / maxValue) * 100}%`,
                     width: barWidth,
                     backgroundColor: '#4D82F3',
-                    marginHorizontal: chartData.length <= 6 ? 0 : barSpacing / 2
                   }
                 ]} 
               />
-              <Text style={styles.barLabel}>{item.label}</Text>
+              <Text style={styles.barLabel}>{item.label.charAt(0)}</Text>
             </View>
           ))}
         </View>
-      </ScrollView>
+      </View>
     </View>
   );
 };
@@ -128,9 +143,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   title: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '700',
-    marginBottom: 20,
+    marginBottom: 12,
     color: '#1F2937',
   },
   loadingContainer: {
@@ -143,14 +158,16 @@ const styles = StyleSheet.create({
     color: '#4B5563',
   },
   chartScrollContent: {
-    paddingHorizontal: 10,
-    height: 250,
+    height: 220,
+    width: '100%',
   },
   chartContainer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    height: 200,
-    marginLeft: 40, // Space for Y-axis labels
+    height: 180,
+    marginLeft: 30, // Less space for Y-axis
+    paddingRight: 5,
+    justifyContent: 'space-between',
   },
   barContainer: {
     alignItems: 'center',
@@ -158,25 +175,25 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   bar: {
-    borderTopLeftRadius: 4,
-    borderTopRightRadius: 4,
+    borderTopLeftRadius: 3,
+    borderTopRightRadius: 3,
   },
   barLabel: {
-    marginTop: 8,
-    fontSize: 12,
+    marginTop: 6,
+    fontSize: 10,
     color: '#6B7280',
   },
   yAxisContainer: {
     position: 'absolute',
     left: 0,
-    top: 45,
+    top: 40,
     bottom: 30,
-    width: 35,
+    width: 25,
     justifyContent: 'space-between',
     alignItems: 'flex-end',
   },
   yAxisLabel: {
-    fontSize: 10,
+    fontSize: 8,
     color: '#9CA3AF',
     marginRight: 4,
   },

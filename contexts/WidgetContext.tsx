@@ -8,6 +8,7 @@ export interface Widget {
   title: string;
   config: any;
   size: 'small' | 'medium' | 'large';
+  isThumbnail: boolean;
 }
 
 // Define the page data structure
@@ -21,13 +22,16 @@ export interface Page {
 // Define the widget context type
 interface WidgetContextType {
   pages: Record<string, Page>;
-  addWidgetToPage: (pageId: string, widget: Widget) => void;
-  removeWidgetFromPage: (pageId: string, widgetId: string) => void;
+  addWidget: (pageId: string, widget: Widget) => void;
+  removeWidget: (pageId: string, widgetId: string) => void;
   updateWidgetConfig: (pageId: string, widgetId: string, config: any) => void;
-  reorderWidgets: (pageId: string, widgetIds: string[]) => void;
+  moveWidgetUp: (pageId: string, widgetId: string) => void;
+  moveWidgetDown: (pageId: string, widgetId: string) => void;
   addPage: (page: Page) => void;
   removePage: (pageId: string) => void;
-  availableWidgets: Widget[];
+  updatePageName: (pageId: string, name: string) => void;
+  allWidgetTypes: Widget[];
+  toggleWidgetThumbnail: (pageId: string, widgetId: string) => void;
 }
 
 const WidgetContext = createContext<WidgetContextType | undefined>(undefined);
@@ -39,7 +43,8 @@ const defaultWidgets: Widget[] = [
     type: 'notes', 
     title: 'Notes', 
     config: { notes: 'Add your notes, ideas, and reminders here...' }, 
-    size: 'medium' 
+    size: 'medium',
+    isThumbnail: false
   },
   { 
     id: 'todo-list', 
@@ -51,7 +56,8 @@ const defaultWidgets: Widget[] = [
         { id: '2', text: 'Finish project', completed: false, createdAt: new Date().toISOString() }
       ] 
     }, 
-    size: 'medium' 
+    size: 'medium',
+    isThumbnail: false
   },
   { 
     id: 'activity-tracker', 
@@ -61,7 +67,8 @@ const defaultWidgets: Widget[] = [
       title: 'Track Progress',
       percentage: 66
     }, 
-    size: 'medium' 
+    size: 'medium',
+    isThumbnail: false
   },
   {
     id: 'calendar',
@@ -72,12 +79,13 @@ const defaultWidgets: Widget[] = [
       view: 'month',
       selectedDate: new Date().toISOString()
     },
-    size: 'medium'
+    size: 'medium',
+    isThumbnail: false
   },
   {
     id: 'chart',
     type: 'chart',
-    title: 'Monthly Sales',
+    title: 'Bar Chart',
     config: {
       data: [
         { label: 'Jan', value: 150 },
@@ -94,7 +102,8 @@ const defaultWidgets: Widget[] = [
         { label: 'Dec', value: 100 },
       ]
     },
-    size: 'medium'
+    size: 'medium',
+    isThumbnail: false
   },
 ];
 
@@ -183,7 +192,7 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
   }, [pages, isLoaded]);
 
   // Add a widget to a page
-  const addWidgetToPage = (pageId: string, widget: Widget) => {
+  const addWidget = (pageId: string, widget: Widget) => {
     setPages(prevPages => {
       if (!prevPages[pageId]) return prevPages;
       
@@ -198,7 +207,7 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
   };
 
   // Remove a widget from a page
-  const removeWidgetFromPage = (pageId: string, widgetId: string) => {
+  const removeWidget = (pageId: string, widgetId: string) => {
     setPages(prevPages => {
       if (!prevPages[pageId]) return prevPages;
       
@@ -286,47 +295,117 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Add a function to reorder widgets on a page
-  const reorderWidgets = (pageId: string, widgetIds: string[]) => {
+  // Add a method to move a widget up
+  const moveWidgetUp = (pageId: string, widgetId: string) => {
     setPages(prevPages => {
       if (!prevPages[pageId]) return prevPages;
       
-      // Create a map of the current widgets by ID for easy lookup
-      const widgetMap = prevPages[pageId].widgets.reduce((map, widget) => {
-        map[widget.id] = widget;
-        return map;
-      }, {} as Record<string, Widget>);
+      const widgets = prevPages[pageId].widgets;
+      const index = widgets.findIndex(w => w.id === widgetId);
+      if (index > 0) {
+        const newWidgets = [
+          widgets[index - 1],
+          widgets[index]
+        ];
+        return {
+          ...prevPages,
+          [pageId]: {
+            ...prevPages[pageId],
+            widgets: newWidgets
+          }
+        };
+      }
+      return prevPages;
+    });
+  };
+
+  // Add a method to move a widget down
+  const moveWidgetDown = (pageId: string, widgetId: string) => {
+    setPages(prevPages => {
+      if (!prevPages[pageId]) return prevPages;
       
-      // Create a new array of widgets in the order specified by widgetIds
-      const reorderedWidgets = widgetIds
-        .filter(id => widgetMap[id]) // Filter out any IDs that don't exist
-        .map(id => widgetMap[id]);
-      
-      // Add any widgets that weren't in the widgetIds array (shouldn't happen, but just in case)
-      const remainingWidgets = prevPages[pageId].widgets.filter(
-        widget => !widgetIds.includes(widget.id)
-      );
+      const widgets = prevPages[pageId].widgets;
+      const index = widgets.findIndex(w => w.id === widgetId);
+      if (index < widgets.length - 1) {
+        const newWidgets = [
+          widgets[index + 1],
+          widgets[index]
+        ];
+        return {
+          ...prevPages,
+          [pageId]: {
+            ...prevPages[pageId],
+            widgets: newWidgets
+          }
+        };
+      }
+      return prevPages;
+    });
+  };
+
+  // Add a method to update a page's name
+  const updatePageName = (pageId: string, name: string) => {
+    setPages(prevPages => {
+      if (!prevPages[pageId]) return prevPages;
       
       return {
         ...prevPages,
         [pageId]: {
           ...prevPages[pageId],
-          widgets: [...reorderedWidgets, ...remainingWidgets]
+          name: name
         }
       };
+    });
+  };
+
+  // Add a method to toggle a widget's thumbnail state
+  const toggleWidgetThumbnail = async (pageId: string, widgetId: string) => {
+    setPages(prevPages => {
+      const page = prevPages[pageId];
+      if (!page) return prevPages;
+
+      const updatedWidgets = page.widgets.map(widget => {
+        if (widget.id === widgetId) {
+          return { ...widget, isThumbnail: !widget.isThumbnail };
+        }
+        return widget;
+      });
+
+      const updatedPages = {
+        ...prevPages,
+        [pageId]: {
+          ...page,
+          widgets: updatedWidgets
+        }
+      };
+
+      // Save updated pages to AsyncStorage
+      (async () => {
+        try {
+          await AsyncStorage.setItem(STORAGE_KEYS.PAGES, JSON.stringify(updatedPages));
+          console.log(`Saved widget ${widgetId} thumbnail toggle to AsyncStorage successfully`);
+        } catch (error) {
+          console.error('Failed to save widget thumbnail toggle:', error);
+        }
+      })();
+      
+      return updatedPages;
     });
   };
 
   // Value for the context provider
   const value = {
     pages,
-    addWidgetToPage,
-    removeWidgetFromPage,
+    addWidget,
+    removeWidget,
     updateWidgetConfig,
-    reorderWidgets,
+    moveWidgetUp,
+    moveWidgetDown,
     addPage,
     removePage,
-    availableWidgets: defaultWidgets
+    updatePageName,
+    allWidgetTypes: defaultWidgets,
+    toggleWidgetThumbnail
   };
 
   return (

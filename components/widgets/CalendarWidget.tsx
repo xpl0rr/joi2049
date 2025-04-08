@@ -1,9 +1,10 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, FlatList, ActivityIndicator, Modal, TextInput, Alert } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, FlatList, ActivityIndicator, Modal, TextInput, Alert, Switch, ScrollView, KeyboardAvoidingView, Platform, TouchableWithoutFeedback } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { IconSymbol } from '../ui/IconSymbol';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Svg, { Circle } from 'react-native-svg';
 
 // Days of week abbreviations
 const DAYS_OF_WEEK = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
@@ -38,10 +39,20 @@ interface DayInfo {
   date: Date;
   isToday: boolean;
   hasEvents: boolean;
-  hasNote: boolean;
+  hasRings: RingData | null;
 }
 
-const STORAGE_KEY = 'joiapp_calendar_notes';
+// Structure for ring data
+interface RingData {
+  outer: boolean; // Red ring
+  middle: boolean; // White ring
+  center: boolean; // Black dot
+  outerNote: string;
+  middleNote: string;
+  centerNote: string;
+}
+
+const STORAGE_KEY = 'joiapp_calendar_rings';
 
 const CalendarWidget: React.FC<CalendarWidgetProps> = ({ 
   events = [], 
@@ -56,47 +67,51 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [view, setView] = useState<'month' | 'year'>('month');
   const [isLoading, setIsLoading] = useState(true);
-  const [calendarNotes, setCalendarNotes] = useState<Record<string, string>>({});
+  const [calendarRings, setCalendarRings] = useState<Record<string, RingData>>({});
   
-  // Modal state for adding notes
-  const [noteModalVisible, setNoteModalVisible] = useState(false);
-  const [currentNote, setCurrentNote] = useState('');
-  const [selectedDateForNote, setSelectedDateForNote] = useState<Date | null>(null);
-  const [noteViewModalVisible, setNoteViewModalVisible] = useState(false);
-  const [viewingNote, setViewingNote] = useState('');
+  // Modal state for rings and notes
+  const [ringsModalVisible, setRingsModalVisible] = useState(false);
+  const [selectedDateForRings, setSelectedDateForRings] = useState<Date | null>(null);
+  const [currentRingData, setCurrentRingData] = useState<RingData>({
+    outer: false,
+    middle: false,
+    center: false,
+    outerNote: '',
+    middleNote: '',
+    centerNote: ''
+  });
 
-  // Load saved notes
+  // Load saved ring data
   useEffect(() => {
-    const loadCalendarNotes = async () => {
+    const loadCalendarRings = async () => {
       try {
-        const savedNotes = await AsyncStorage.getItem(STORAGE_KEY);
-        if (savedNotes) {
-          setCalendarNotes(JSON.parse(savedNotes));
+        const savedRings = await AsyncStorage.getItem(STORAGE_KEY);
+        if (savedRings) {
+          setCalendarRings(JSON.parse(savedRings));
         }
       } catch (error) {
-        console.error('Failed to load calendar notes:', error);
+        console.error('Failed to load calendar rings:', error);
       }
       setIsLoading(false);
     };
     
-    loadCalendarNotes();
+    loadCalendarRings();
   }, []);
 
-  // Save notes when updated
+  // Save rings when updated
   useEffect(() => {
-    const saveCalendarNotes = async () => {
+    const saveCalendarRings = async () => {
       try {
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(calendarNotes));
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(calendarRings));
+        console.log('Saved rings:', JSON.stringify(calendarRings));
       } catch (error) {
-        console.error('Failed to save calendar notes:', error);
+        console.error('Failed to save calendar rings:', error);
       }
     };
     
-    // Only save if calendarNotes is not empty (skip initial load)
-    if (Object.keys(calendarNotes).length > 0) {
-      saveCalendarNotes();
-    }
-  }, [calendarNotes]);
+    // Save regardless of whether calendarRings is empty
+    saveCalendarRings();
+  }, [calendarRings]);
 
   // Format date to string key for storage
   const formatDateKey = (date: Date) => {
@@ -130,12 +145,12 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
                  eventDate.getMonth() === month && 
                  eventDate.getFullYear() === year;
         }),
-        hasNote: !!calendarNotes[dateKey]
+        hasRings: calendarRings[dateKey] || null
       });
     }
     
     return days;
-  }, [events, today, calendarNotes]);
+  }, [events, today, calendarRings]);
   
   // Move to previous month
   const goToPreviousMonth = useCallback(() => {
@@ -172,13 +187,22 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
   
   // Handle day selection
   const selectDay = useCallback((date: Date) => {
-    // Don't update the selected date visually - just open the note editor
+    // Open rings selection modal for the selected date
+    setSelectedDateForRings(date);
     
-    // Open note editor for the selected date
-    setSelectedDateForNote(date);
+    // Get existing ring data or initialize empty
     const dateKey = formatDateKey(date);
-    setCurrentNote(calendarNotes[dateKey] || '');
-    setNoteModalVisible(true);
+    const existingRings = calendarRings[dateKey] || {
+      outer: false,
+      middle: false,
+      center: false,
+      outerNote: '',
+      middleNote: '',
+      centerNote: ''
+    };
+    
+    setCurrentRingData(existingRings);
+    setRingsModalVisible(true);
     
     // Still update the config with the selected date
     onUpdate({
@@ -186,7 +210,7 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
       view,
       selectedDate: date.toISOString()
     });
-  }, [events, view, onUpdate, calendarNotes]);
+  }, [events, view, onUpdate, calendarRings]);
   
   // Handle month selection in year view
   const selectMonth = useCallback((month: number) => {
@@ -207,59 +231,114 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
       onEdit();
     }
     
-    // Prepare for adding a note to the selected date
+    // Prepare for adding rings to the selected date
     const date = new Date(selectedDate);
-    setSelectedDateForNote(date);
+    setSelectedDateForRings(date);
     
-    // Pre-fill with existing note if exists
+    // Get existing ring data or initialize empty
     const dateKey = formatDateKey(date);
-    setCurrentNote(calendarNotes[dateKey] || '');
+    const existingRings = calendarRings[dateKey] || {
+      outer: false,
+      middle: false,
+      center: false,
+      outerNote: '',
+      middleNote: '',
+      centerNote: ''
+    };
     
-    // Show modal
-    setNoteModalVisible(true);
-  }, [selectedDate, calendarNotes, onEdit]);
+    setCurrentRingData(existingRings);
+    setRingsModalVisible(true);
+  }, [selectedDate, calendarRings, onEdit]);
 
-  // Save the note
-  const saveCalendarNote = useCallback(() => {
-    if (!selectedDateForNote) return;
+  // Save the ring data
+  const saveRings = useCallback(() => {
+    if (!selectedDateForRings) return;
     
-    const dateKey = formatDateKey(selectedDateForNote);
+    const dateKey = formatDateKey(selectedDateForRings);
     
-    if (currentNote.trim()) {
-      // Add or update note
-      setCalendarNotes(prev => ({
-        ...prev,
-        [dateKey]: currentNote.trim()
-      }));
-      Alert.alert('Success', 'Note saved!');
-    } else {
-      // Remove note if empty
-      setCalendarNotes(prev => {
-        const newNotes = { ...prev };
-        delete newNotes[dateKey];
-        return newNotes;
+    // Check if any ring is active
+    const hasAnyRing = currentRingData.outer || currentRingData.middle || currentRingData.center;
+    
+    if (hasAnyRing) {
+      // Add or update rings
+      setCalendarRings(prev => {
+        const updatedRings = { ...prev };
+        updatedRings[dateKey] = { ...currentRingData };
+        return updatedRings;
       });
+      Alert.alert('Success', 'Rings saved!');
+    } else {
+      // Remove rings if none are active
+      setCalendarRings(prev => {
+        const updatedRings = { ...prev };
+        if (updatedRings[dateKey]) {
+          delete updatedRings[dateKey];
+        }
+        return updatedRings;
+      });
+      Alert.alert('Success', 'Rings removed!');
     }
     
     // Close modal
-    setNoteModalVisible(false);
-    setCurrentNote('');
-  }, [selectedDateForNote, currentNote]);
+    setRingsModalVisible(false);
+  }, [selectedDateForRings, currentRingData]);
 
-  // Count notes for the current month
-  const getMonthNotesCount = useCallback(() => {
-    let count = 0;
-    
-    for (const dateKey in calendarNotes) {
-      const [year, month, day] = dateKey.split('-').map(Number);
-      
-      if (month - 1 === currentMonth && year === currentYear) {
-        count++;
-      }
-    }
-    
-    return count;
-  }, [calendarNotes, currentMonth, currentYear]);
+  // Update a specific ring toggle
+  const toggleRing = (ring: 'outer' | 'middle' | 'center', value: boolean) => {
+    setCurrentRingData(prev => ({
+      ...prev,
+      [ring]: value
+    }));
+  };
+  
+  // Update a specific note
+  const updateNote = (noteType: 'outerNote' | 'middleNote' | 'centerNote', value: string) => {
+    setCurrentRingData(prev => ({
+      ...prev,
+      [noteType]: value
+    }));
+  };
+  
+  // Render rings for a date
+  const renderDateRings = (ringData: RingData) => {
+    return (
+      <Svg height="48" width="48" viewBox="0 0 24 24">
+        {/* Outer ring (red) */}
+        {ringData.outer && (
+          <Circle
+            cx="12"
+            cy="12"
+            r="8"
+            stroke="#FF3B30"
+            strokeWidth="2"
+            fill="transparent"
+          />
+        )}
+        
+        {/* Middle ring (white) */}
+        {ringData.middle && (
+          <Circle
+            cx="12"
+            cy="12"
+            r="5"
+            stroke="#FFFFFF"
+            strokeWidth="2"
+            fill="transparent"
+          />
+        )}
+        
+        {/* Center dot (black) */}
+        {ringData.center && (
+          <Circle
+            cx="12"
+            cy="12"
+            r="2"
+            fill="#000000"
+          />
+        )}
+      </Svg>
+    );
+  };
   
   // Render the month view
   const renderMonthView = () => {
@@ -276,35 +355,49 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
         </View>
         
         <View style={styles.daysGrid}>
-          {days.map((day, index) => (
-            <TouchableOpacity
-              key={index}
-              style={[
-                styles.dayCell,
-                day?.isToday && styles.todayCell,
-                day?.hasNote && styles.noteDateCell
-              ]}
-              onPress={() => day?.date && selectDay(day.date)}
-              disabled={!day?.date}
-            >
-              {day?.day && (
-                <>
+          {days.map((day, index) => {
+            // Empty cell
+            if (!day?.day) {
+              return <View key={index} style={styles.dayCell} />;
+            }
+            
+            // If there's a white ring or black dot, don't show number
+            const showNumber = !day.hasRings || !(day.hasRings.middle || day.hasRings.center);
+            
+            return (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.dayCell,
+                  day.isToday && styles.todayCell
+                ]}
+                onPress={() => day.date && selectDay(day.date)}
+              >
+                {showNumber && (
                   <Text style={[
                     styles.dayText,
-                    day.isToday && styles.todayText,
-                    day.hasNote && styles.noteDateText
+                    day.isToday && styles.todayText
                   ]}>
                     {day.day}
                   </Text>
-                  {day.hasEvents && <View style={styles.eventDot} />}
-                </>
-              )}
-            </TouchableOpacity>
-          ))}
+                )}
+                
+                {day.hasEvents && 
+                  <View style={styles.eventDot} />
+                }
+                
+                {day.hasRings && (
+                  <View style={styles.ringsContainer}>
+                    {renderDateRings(day.hasRings)}
+                  </View>
+                )}
+              </TouchableOpacity>
+            );
+          })}
         </View>
         
-        <TouchableOpacity style={styles.addNoteButton} onPress={handleEditPress}>
-          <Text style={styles.addNoteButtonText}>Add Note</Text>
+        <TouchableOpacity style={styles.addRingsButton} onPress={handleEditPress}>
+          <Text style={styles.addRingsButtonText}>Add Rings</Text>
         </TouchableOpacity>
       </View>
     );
@@ -372,45 +465,127 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
       
       {view === 'month' ? renderMonthView() : renderYearView()}
       
-      {/* Modal for adding notes */}
+      {/* Modal for activity rings */}
       <Modal
         animationType="slide"
         transparent={true}
-        visible={noteModalVisible}
-        onRequestClose={() => setNoteModalVisible(false)}
+        visible={ringsModalVisible}
+        onRequestClose={() => setRingsModalVisible(false)}
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>
-              {selectedDateForNote ? `Note for ${selectedDateForNote.getDate()} ${MONTHS[selectedDateForNote.getMonth()]}` : 'Add Note'}
-            </Text>
-            
-            <TextInput
-              style={styles.noteInput}
-              placeholder="Enter your note here..."
-              value={currentNote}
-              onChangeText={setCurrentNote}
-              multiline
-              numberOfLines={5}
-            />
-            
-            <View style={styles.modalButtons}>
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.cancelButton]} 
-                onPress={() => setNoteModalVisible(false)}
-              >
-                <Text style={styles.buttonText}>Cancel</Text>
-              </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.modalOuterContainer}
+          activeOpacity={1}
+          onPress={() => setRingsModalVisible(false)}
+        >
+          <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+            <View style={styles.topSheetContainer}>
+              <View style={styles.bottomSheetHandle} />
               
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.saveButton]} 
-                onPress={saveCalendarNote}
-              >
-                <Text style={[styles.buttonText, styles.saveButtonText]}>Save</Text>
-              </TouchableOpacity>
+              <Text style={styles.modalTitle}>
+                {selectedDateForRings ? `Activity Rings for ${selectedDateForRings.getDate()} ${MONTHS[selectedDateForRings.getMonth()]}` : 'Add Activity Rings'}
+              </Text>
+              
+              <ScrollView style={styles.modalContent}>
+                {/* Red Ring */}
+                <View style={styles.ringOptionContainer}>
+                  <View style={styles.ringOption}>
+                    <View style={styles.ringLabelContainer}>
+                      <View style={styles.ringColorSample}>
+                        <View style={[styles.colorSample, styles.outerRingSample]} />
+                      </View>
+                      <Text style={styles.ringLabel}>Red Ring</Text>
+                    </View>
+                    <Switch
+                      value={currentRingData.outer}
+                      onValueChange={(value) => toggleRing('outer', value)}
+                      trackColor={{ false: '#E5E7EB', true: '#FF897A' }}
+                      thumbColor={currentRingData.outer ? '#FF3B30' : '#f4f3f4'}
+                    />
+                  </View>
+                  
+                  {currentRingData.outer && (
+                    <TextInput
+                      style={styles.noteInput}
+                      placeholder="Note for red ring..."
+                      value={currentRingData.outerNote}
+                      onChangeText={(text) => updateNote('outerNote', text)}
+                    />
+                  )}
+                </View>
+                
+                {/* White Ring */}
+                <View style={styles.ringOptionContainer}>
+                  <View style={styles.ringOption}>
+                    <View style={styles.ringLabelContainer}>
+                      <View style={styles.ringColorSample}>
+                        <View style={[styles.colorSample, styles.middleRingSample]} />
+                      </View>
+                      <Text style={styles.ringLabel}>White Ring</Text>
+                    </View>
+                    <Switch
+                      value={currentRingData.middle}
+                      onValueChange={(value) => toggleRing('middle', value)}
+                      trackColor={{ false: '#E5E7EB', true: '#E5E5EA' }}
+                      thumbColor={currentRingData.middle ? '#FFFFFF' : '#f4f3f4'}
+                    />
+                  </View>
+                  
+                  {currentRingData.middle && (
+                    <TextInput
+                      style={styles.noteInput}
+                      placeholder="Note for white ring..."
+                      value={currentRingData.middleNote}
+                      onChangeText={(text) => updateNote('middleNote', text)}
+                    />
+                  )}
+                </View>
+                
+                {/* Center Dot */}
+                <View style={styles.ringOptionContainer}>
+                  <View style={styles.ringOption}>
+                    <View style={styles.ringLabelContainer}>
+                      <View style={styles.ringColorSample}>
+                        <View style={[styles.colorSample, styles.centerDotSample]} />
+                      </View>
+                      <Text style={styles.ringLabel}>Center Dot</Text>
+                    </View>
+                    <Switch
+                      value={currentRingData.center}
+                      onValueChange={(value) => toggleRing('center', value)}
+                      trackColor={{ false: '#E5E7EB', true: '#9B9B9B' }}
+                      thumbColor={currentRingData.center ? '#000000' : '#f4f3f4'}
+                    />
+                  </View>
+                  
+                  {currentRingData.center && (
+                    <TextInput
+                      style={styles.noteInput}
+                      placeholder="Note for center dot..."
+                      value={currentRingData.centerNote}
+                      onChangeText={(text) => updateNote('centerNote', text)}
+                    />
+                  )}
+                </View>
+              </ScrollView>
+              
+              <View style={styles.modalButtons}>
+                <TouchableOpacity 
+                  style={[styles.modalButton, styles.cancelButton]} 
+                  onPress={() => setRingsModalVisible(false)}
+                >
+                  <Text style={styles.buttonText}>Cancel</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity 
+                  style={[styles.modalButton, styles.saveButton]} 
+                  onPress={saveRings}
+                >
+                  <Text style={[styles.buttonText, styles.saveButtonText]}>Save</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-        </View>
+          </TouchableWithoutFeedback>
+        </TouchableOpacity>
       </Modal>
     </View>
   );
@@ -463,39 +638,29 @@ const styles = StyleSheet.create({
   daysGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    marginBottom: 10,
   },
   dayCell: {
     width: '14.28%',
     aspectRatio: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 20,
+    borderRadius: 8,
+    position: 'relative',
   },
   todayCell: {
-    backgroundColor: '#EBF5FF',
-  },
-  selectedCell: {
-    backgroundColor: '#4D82F3',
-  },
-  noteDateCell: {
-    backgroundColor: '#4D82F3',
+    // No border or background
   },
   dayText: {
     fontSize: 14,
     color: '#334155',
     fontWeight: '500',
+    marginBottom: 0,
+    zIndex: 1, // Ensure text is above rings
   },
   todayText: {
-    fontWeight: '700',
-    color: '#4D82F3',
-  },
-  noteDateText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-  },
-  selectedText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
+    fontWeight: '500',
+    color: '#1F2937',
   },
   eventDot: {
     width: 4,
@@ -504,7 +669,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#4D82F3',
     marginTop: 2,
   },
-  addNoteButton: {
+  ringsContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    top: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: -1,
+  },
+  addRingsButton: {
     backgroundColor: '#4D82F3',
     paddingVertical: 10,
     paddingHorizontal: 16,
@@ -512,40 +687,113 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginTop: 16,
   },
-  addNoteButtonText: {
+  addRingsButtonText: {
     color: 'white',
     fontSize: 14,
     fontWeight: '600',
   },
-  modalContainer: {
+  modalOuterContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'flex-start',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    width: '100%',
+    height: '100%',
   },
-  modalContent: {
+  topSheetContainer: {
     backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 24,
-    width: '85%',
-    maxHeight: '70%',
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
+    padding: 16,
+    paddingTop: 30,
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    maxHeight: '60%',
+    paddingBottom: 20,
+  },
+  bottomSheetHandle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#E5E7EB',
+    alignSelf: 'center',
+    marginBottom: 12,
+    marginTop: 6,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
     color: '#1F2937',
-    marginBottom: 16,
+    marginBottom: 12,
     textAlign: 'center',
+  },
+  modalContent: {
+    width: '100%',
+    marginBottom: 12,
+    maxHeight: 280,
+  },
+  ringOptionContainer: {
+    marginBottom: 12,
+    width: '100%',
+  },
+  ringOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 4,
+    marginBottom: 4,
+    width: '100%',
+  },
+  ringLabelContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  ringColorSample: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  colorSample: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+  },
+  outerRingSample: {
+    borderWidth: 2,
+    borderColor: '#FF3B30',
+  },
+  middleRingSample: {
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    backgroundColor: '#F3F4F6',
+  },
+  centerDotSample: {
+    backgroundColor: '#000000',
+  },
+  ringLabel: {
+    fontSize: 14,
+    color: '#1F2937',
   },
   noteInput: {
     backgroundColor: '#F9FAFB',
     borderRadius: 8,
-    padding: 12,
-    height: 120,
-    textAlignVertical: 'top',
-    marginBottom: 16,
+    padding: 10,
+    marginVertical: 4,
     borderWidth: 1,
     borderColor: '#E5E7EB',
+    minHeight: 36,
+    width: '100%',
   },
   modalButtons: {
     flexDirection: 'row',
@@ -564,10 +812,6 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     backgroundColor: '#4D82F3',
-  },
-  closeButton: {
-    backgroundColor: '#4D82F3',
-    marginTop: 16,
   },
   buttonText: {
     fontSize: 14,

@@ -302,20 +302,23 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
       
       const widgets = prevPages[pageId].widgets;
       const index = widgets.findIndex(w => w.id === widgetId);
-      if (index > 0) {
-        const newWidgets = [
-          widgets[index - 1],
-          widgets[index]
-        ];
-        return {
-          ...prevPages,
-          [pageId]: {
-            ...prevPages[pageId],
-            widgets: newWidgets
-          }
-        };
-      }
-      return prevPages;
+      
+      // Can't move up if already at the top
+      if (index <= 0) return prevPages;
+      
+      // Create a new array with the widgets swapped
+      const newWidgets = [...widgets];
+      const temp = newWidgets[index];
+      newWidgets[index] = newWidgets[index - 1];
+      newWidgets[index - 1] = temp;
+      
+      return {
+        ...prevPages,
+        [pageId]: {
+          ...prevPages[pageId],
+          widgets: newWidgets
+        }
+      };
     });
   };
 
@@ -326,20 +329,23 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
       
       const widgets = prevPages[pageId].widgets;
       const index = widgets.findIndex(w => w.id === widgetId);
-      if (index < widgets.length - 1) {
-        const newWidgets = [
-          widgets[index + 1],
-          widgets[index]
-        ];
-        return {
-          ...prevPages,
-          [pageId]: {
-            ...prevPages[pageId],
-            widgets: newWidgets
-          }
-        };
-      }
-      return prevPages;
+      
+      // Can't move down if already at the bottom
+      if (index < 0 || index >= widgets.length - 1) return prevPages;
+      
+      // Create a new array with the widgets swapped
+      const newWidgets = [...widgets];
+      const temp = newWidgets[index];
+      newWidgets[index] = newWidgets[index + 1];
+      newWidgets[index + 1] = temp;
+      
+      return {
+        ...prevPages,
+        [pageId]: {
+          ...prevPages[pageId],
+          widgets: newWidgets
+        }
+      };
     });
   };
 

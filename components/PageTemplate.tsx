@@ -310,6 +310,7 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: 16,
     paddingHorizontal: 16,
+    paddingTop: 8,
   },
   editOverlay: {
     position: 'absolute',

@@ -10,7 +10,7 @@ import TabManager from '@/components/TabManager';
 
 export default function Settings() {
   const colorScheme = useColorScheme();
-  const { availableWidgets, pages, addWidgetToPage } = useWidgets();
+  const { pages, addWidget, allWidgetTypes } = useWidgets();
   const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
   const [showPageSelector, setShowPageSelector] = useState(false);
   const [isAddingWidget, setIsAddingWidget] = useState(false);
@@ -45,7 +45,7 @@ export default function Settings() {
     
     // Add widget with a small delay to show the loading indicator
     setTimeout(() => {
-      addWidgetToPage(pageId, widgetInstance);
+      addWidget(pageId, widgetInstance);
       setIsAddingWidget(false);
       setAddingWidgetType(null);
       setShowPageSelector(false);
@@ -55,14 +55,15 @@ export default function Settings() {
   };
 
   // Group widgets by type
-  const widgetsByType: Record<string, Widget[]> = availableWidgets.reduce((acc, widget) => {
-    const type = widget.type;
-    if (!acc[type]) {
-      acc[type] = [];
-    }
-    acc[type].push(widget);
-    return acc;
-  }, {} as Record<string, Widget[]>);
+  const widgetsByType: Record<string, Widget[]> = Array.isArray(allWidgetTypes) ? 
+    allWidgetTypes.reduce((acc, widget) => {
+      const type = widget.type;
+      if (!acc[type]) {
+        acc[type] = [];
+      }
+      acc[type].push(widget);
+      return acc;
+    }, {} as Record<string, Widget[]>) : {};
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>

@@ -4,9 +4,14 @@ import { StyleSheet, View, Text, TextInput } from 'react-native';
 interface NotesWidgetProps {
   notes: string;
   onUpdate: (notes: string) => void;
+  readOnly?: boolean;
 }
 
-const NotesWidget: React.FC<NotesWidgetProps> = ({ notes: initialNotes, onUpdate }) => {
+const NotesWidget: React.FC<NotesWidgetProps> = ({ 
+  notes: initialNotes, 
+  onUpdate,
+  readOnly = false
+}) => {
   const [notes, setNotes] = useState(initialNotes || '');
   const [isFocused, setIsFocused] = useState(false);
 
@@ -40,7 +45,8 @@ const NotesWidget: React.FC<NotesWidgetProps> = ({ notes: initialNotes, onUpdate
       <TextInput
         style={[
           styles.input,
-          isFocused && styles.focusedInput
+          isFocused && styles.focusedInput,
+          readOnly && styles.readOnlyInput
         ]}
         placeholder="Type your notes here..."
         placeholderTextColor="#94A3B8"
@@ -51,7 +57,7 @@ const NotesWidget: React.FC<NotesWidgetProps> = ({ notes: initialNotes, onUpdate
         onFocus={handleFocus}
         onBlur={handleBlur}
         scrollEnabled={true}
-        editable={true}
+        editable={!readOnly}
         maxLength={1000}
         keyboardType="default"
         returnKeyType="default"
@@ -90,6 +96,10 @@ const styles = StyleSheet.create({
   focusedInput: {
     borderColor: '#4D82F3',
     borderWidth: 1.5,
+  },
+  readOnlyInput: {
+    backgroundColor: '#F9FAFB',
+    borderColor: '#E5E7EB',
   },
 });
 

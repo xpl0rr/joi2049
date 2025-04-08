@@ -132,6 +132,7 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
     for (let i = 1; i <= daysInMonth; i++) {
       const currentDate = new Date(year, month, i);
       const dateKey = formatDateKey(currentDate);
+      const dayRings = calendarRings[dateKey];
       
       days.push({
         day: i,
@@ -145,7 +146,7 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
                  eventDate.getMonth() === month && 
                  eventDate.getFullYear() === year;
         }),
-        hasRings: calendarRings[dateKey] || null
+        hasRings: dayRings || null
       });
     }
     
@@ -250,57 +251,9 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
     setRingsModalVisible(true);
   }, [selectedDate, calendarRings, onEdit]);
 
-  // Save the ring data
-  const saveRings = useCallback(() => {
-    if (!selectedDateForRings) return;
-    
-    const dateKey = formatDateKey(selectedDateForRings);
-    
-    // Check if any ring is active
-    const hasAnyRing = currentRingData.outer || currentRingData.middle || currentRingData.center;
-    
-    if (hasAnyRing) {
-      // Add or update rings
-      setCalendarRings(prev => {
-        const updatedRings = { ...prev };
-        updatedRings[dateKey] = { ...currentRingData };
-        return updatedRings;
-      });
-      Alert.alert('Success', 'Rings saved!');
-    } else {
-      // Remove rings if none are active
-      setCalendarRings(prev => {
-        const updatedRings = { ...prev };
-        if (updatedRings[dateKey]) {
-          delete updatedRings[dateKey];
-        }
-        return updatedRings;
-      });
-      Alert.alert('Success', 'Rings removed!');
-    }
-    
-    // Close modal
-    setRingsModalVisible(false);
-  }, [selectedDateForRings, currentRingData]);
-
-  // Update a specific ring toggle
-  const toggleRing = (ring: 'outer' | 'middle' | 'center', value: boolean) => {
-    setCurrentRingData(prev => ({
-      ...prev,
-      [ring]: value
-    }));
-  };
-  
-  // Update a specific note
-  const updateNote = (noteType: 'outerNote' | 'middleNote' | 'centerNote', value: string) => {
-    setCurrentRingData(prev => ({
-      ...prev,
-      [noteType]: value
-    }));
-  };
-  
   // Render rings for a date
   const renderDateRings = (ringData: RingData) => {
+    console.log('Rendering rings with data:', JSON.stringify(ringData));
     return (
       <Svg height="48" width="48" viewBox="0 0 24 24">
         {/* Outer ring (red) */}
@@ -315,13 +268,13 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
           />
         )}
         
-        {/* Middle ring (white) */}
+        {/* Middle ring (blue) */}
         {ringData.middle && (
           <Circle
             cx="12"
             cy="12"
             r="5"
-            stroke="#FFFFFF"
+            stroke="#4D82F3"
             strokeWidth="2"
             fill="transparent"
           />
@@ -361,7 +314,7 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
               return <View key={index} style={styles.dayCell} />;
             }
             
-            // If there's a white ring or black dot, don't show number
+            // If there's a blue ring or black dot, don't show number
             const showNumber = !day.hasRings || !(day.hasRings.middle || day.hasRings.center);
             
             return (
@@ -432,6 +385,56 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
     );
   };
   
+  // Save the ring data
+  const saveRings = useCallback(() => {
+    if (!selectedDateForRings) return;
+    
+    const dateKey = formatDateKey(selectedDateForRings);
+    console.log('Saving rings for date:', dateKey, JSON.stringify(currentRingData));
+    
+    // Check if any ring is active
+    const hasAnyRing = currentRingData.outer || currentRingData.middle || currentRingData.center;
+    
+    if (hasAnyRing) {
+      // Add or update rings
+      setCalendarRings(prev => {
+        const updatedRings = { ...prev };
+        updatedRings[dateKey] = { ...currentRingData };
+        return updatedRings;
+      });
+      Alert.alert('Success', 'Rings saved!');
+    } else {
+      // Remove rings if none are active
+      setCalendarRings(prev => {
+        const updatedRings = { ...prev };
+        if (updatedRings[dateKey]) {
+          delete updatedRings[dateKey];
+        }
+        return updatedRings;
+      });
+      Alert.alert('Success', 'Rings removed!');
+    }
+    
+    // Close modal
+    setRingsModalVisible(false);
+  }, [selectedDateForRings, currentRingData]);
+
+  // Update a specific ring toggle
+  const toggleRing = (ring: 'outer' | 'middle' | 'center', value: boolean) => {
+    setCurrentRingData(prev => ({
+      ...prev,
+      [ring]: value
+    }));
+  };
+  
+  // Update a specific note
+  const updateNote = (noteType: 'outerNote' | 'middleNote' | 'centerNote', value: string) => {
+    setCurrentRingData(prev => ({
+      ...prev,
+      [noteType]: value
+    }));
+  };
+  
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -471,120 +474,118 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
         visible={ringsModalVisible}
         onRequestClose={() => setRingsModalVisible(false)}
       >
-        <TouchableOpacity 
-          style={styles.modalOuterContainer}
-          activeOpacity={1}
-          onPress={() => setRingsModalVisible(false)}
-        >
-          <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-            <View style={styles.topSheetContainer}>
-              <View style={styles.bottomSheetHandle} />
-              
-              <Text style={styles.modalTitle}>
-                {selectedDateForRings ? `Activity Rings for ${selectedDateForRings.getDate()} ${MONTHS[selectedDateForRings.getMonth()]}` : 'Add Activity Rings'}
-              </Text>
-              
-              <ScrollView style={styles.modalContent}>
-                {/* Red Ring */}
-                <View style={styles.ringOptionContainer}>
-                  <View style={styles.ringOption}>
-                    <View style={styles.ringLabelContainer}>
-                      <View style={styles.ringColorSample}>
-                        <View style={[styles.colorSample, styles.outerRingSample]} />
-                      </View>
-                      <Text style={styles.ringLabel}>Red Ring</Text>
+        <View style={styles.modalOuterContainer}>
+          <TouchableWithoutFeedback onPress={() => setRingsModalVisible(false)}>
+            <View style={styles.modalBackdrop} />
+          </TouchableWithoutFeedback>
+          
+          <View style={styles.topSheetContainer}>
+            <View style={styles.bottomSheetHandle} />
+            
+            <Text style={styles.modalTitle}>
+              {selectedDateForRings ? `Activity Rings for ${selectedDateForRings.getDate()} ${MONTHS[selectedDateForRings.getMonth()]}` : 'Add Activity Rings'}
+            </Text>
+            
+            <View style={styles.ringOptionsContainer}>
+              {/* Red Ring */}
+              <View style={styles.ringOptionContainer}>
+                <View style={styles.ringOption}>
+                  <View style={styles.ringLabelContainer}>
+                    <View style={styles.ringColorSample}>
+                      <View style={[styles.colorSample, styles.outerRingSample]} />
                     </View>
-                    <Switch
-                      value={currentRingData.outer}
-                      onValueChange={(value) => toggleRing('outer', value)}
-                      trackColor={{ false: '#E5E7EB', true: '#FF897A' }}
-                      thumbColor={currentRingData.outer ? '#FF3B30' : '#f4f3f4'}
-                    />
+                    <Text style={styles.ringLabel}>Red Ring</Text>
                   </View>
-                  
-                  {currentRingData.outer && (
-                    <TextInput
-                      style={styles.noteInput}
-                      placeholder="Note for red ring..."
-                      value={currentRingData.outerNote}
-                      onChangeText={(text) => updateNote('outerNote', text)}
-                    />
-                  )}
+                  <Switch
+                    value={currentRingData.outer}
+                    onValueChange={(value) => toggleRing('outer', value)}
+                    trackColor={{ false: '#E5E7EB', true: '#FF897A' }}
+                    thumbColor={currentRingData.outer ? '#FF3B30' : '#f4f3f4'}
+                  />
                 </View>
                 
-                {/* White Ring */}
-                <View style={styles.ringOptionContainer}>
-                  <View style={styles.ringOption}>
-                    <View style={styles.ringLabelContainer}>
-                      <View style={styles.ringColorSample}>
-                        <View style={[styles.colorSample, styles.middleRingSample]} />
-                      </View>
-                      <Text style={styles.ringLabel}>White Ring</Text>
-                    </View>
-                    <Switch
-                      value={currentRingData.middle}
-                      onValueChange={(value) => toggleRing('middle', value)}
-                      trackColor={{ false: '#E5E7EB', true: '#E5E5EA' }}
-                      thumbColor={currentRingData.middle ? '#FFFFFF' : '#f4f3f4'}
-                    />
-                  </View>
-                  
-                  {currentRingData.middle && (
-                    <TextInput
-                      style={styles.noteInput}
-                      placeholder="Note for white ring..."
-                      value={currentRingData.middleNote}
-                      onChangeText={(text) => updateNote('middleNote', text)}
-                    />
-                  )}
-                </View>
-                
-                {/* Center Dot */}
-                <View style={styles.ringOptionContainer}>
-                  <View style={styles.ringOption}>
-                    <View style={styles.ringLabelContainer}>
-                      <View style={styles.ringColorSample}>
-                        <View style={[styles.colorSample, styles.centerDotSample]} />
-                      </View>
-                      <Text style={styles.ringLabel}>Center Dot</Text>
-                    </View>
-                    <Switch
-                      value={currentRingData.center}
-                      onValueChange={(value) => toggleRing('center', value)}
-                      trackColor={{ false: '#E5E7EB', true: '#9B9B9B' }}
-                      thumbColor={currentRingData.center ? '#000000' : '#f4f3f4'}
-                    />
-                  </View>
-                  
-                  {currentRingData.center && (
-                    <TextInput
-                      style={styles.noteInput}
-                      placeholder="Note for center dot..."
-                      value={currentRingData.centerNote}
-                      onChangeText={(text) => updateNote('centerNote', text)}
-                    />
-                  )}
-                </View>
-              </ScrollView>
+                {currentRingData.outer && (
+                  <TextInput
+                    style={styles.noteInput}
+                    placeholder="Note for red ring..."
+                    value={currentRingData.outerNote}
+                    onChangeText={(text) => updateNote('outerNote', text)}
+                  />
+                )}
+              </View>
               
-              <View style={styles.modalButtons}>
-                <TouchableOpacity 
-                  style={[styles.modalButton, styles.cancelButton]} 
-                  onPress={() => setRingsModalVisible(false)}
-                >
-                  <Text style={styles.buttonText}>Cancel</Text>
-                </TouchableOpacity>
+              {/* Blue Ring */}
+              <View style={styles.ringOptionContainer}>
+                <View style={styles.ringOption}>
+                  <View style={styles.ringLabelContainer}>
+                    <View style={styles.ringColorSample}>
+                      <View style={[styles.colorSample, styles.middleRingSample]} />
+                    </View>
+                    <Text style={styles.ringLabel}>Blue Ring</Text>
+                  </View>
+                  <Switch
+                    value={currentRingData.middle}
+                    onValueChange={(value) => toggleRing('middle', value)}
+                    trackColor={{ false: '#E5E7EB', true: '#A4C1F8' }}
+                    thumbColor={currentRingData.middle ? '#4D82F3' : '#f4f3f4'}
+                  />
+                </View>
                 
-                <TouchableOpacity 
-                  style={[styles.modalButton, styles.saveButton]} 
-                  onPress={saveRings}
-                >
-                  <Text style={[styles.buttonText, styles.saveButtonText]}>Save</Text>
-                </TouchableOpacity>
+                {currentRingData.middle && (
+                  <TextInput
+                    style={styles.noteInput}
+                    placeholder="Note for blue ring..."
+                    value={currentRingData.middleNote}
+                    onChangeText={(text) => updateNote('middleNote', text)}
+                  />
+                )}
+              </View>
+              
+              {/* Center Dot */}
+              <View style={styles.ringOptionContainer}>
+                <View style={styles.ringOption}>
+                  <View style={styles.ringLabelContainer}>
+                    <View style={styles.ringColorSample}>
+                      <View style={[styles.colorSample, styles.centerDotSample]} />
+                    </View>
+                    <Text style={styles.ringLabel}>Center Dot</Text>
+                  </View>
+                  <Switch
+                    value={currentRingData.center}
+                    onValueChange={(value) => toggleRing('center', value)}
+                    trackColor={{ false: '#E5E7EB', true: '#9B9B9B' }}
+                    thumbColor={currentRingData.center ? '#000000' : '#f4f3f4'}
+                  />
+                </View>
+                
+                {currentRingData.center && (
+                  <TextInput
+                    style={styles.noteInput}
+                    placeholder="Note for center dot..."
+                    value={currentRingData.centerNote}
+                    onChangeText={(text) => updateNote('centerNote', text)}
+                  />
+                )}
               </View>
             </View>
-          </TouchableWithoutFeedback>
-        </TouchableOpacity>
+            
+            <View style={styles.modalButtons}>
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.cancelButton]} 
+                onPress={() => setRingsModalVisible(false)}
+              >
+                <Text style={styles.buttonText}>Cancel</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.saveButton]} 
+                onPress={saveRings}
+              >
+                <Text style={[styles.buttonText, styles.saveButtonText]}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
       </Modal>
     </View>
   );
@@ -702,7 +703,13 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     width: '100%',
-    height: '100%',
+  },
+  modalBackdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   topSheetContainer: {
     backgroundColor: 'white',
@@ -719,8 +726,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
-    maxHeight: '60%',
-    paddingBottom: 20,
   },
   bottomSheetHandle: {
     width: 36,
@@ -738,10 +743,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     textAlign: 'center',
   },
-  modalContent: {
-    width: '100%',
-    marginBottom: 12,
-    maxHeight: 280,
+  ringOptionsContainer: {
+    marginVertical: 12,
   },
   ringOptionContainer: {
     marginBottom: 12,
@@ -780,7 +783,7 @@ const styles = StyleSheet.create({
   },
   middleRingSample: {
     borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderColor: '#4D82F3',
     backgroundColor: '#F3F4F6',
   },
   centerDotSample: {

@@ -50,7 +50,7 @@ const PageTemplate = ({ pageId }: { pageId: string }) => {
       borderWidth: 2,
       borderColor: '#4D82F3', // App blue theme color
       borderRadius: 12,
-      marginBottom: 16,
+      marginBottom: widget.isThumbnail ? 0 : 24, // No bottom margin for thumbnails, handled by thumbnailGrid
     };
     
     if (widget.isThumbnail) {
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingTop: 16,
+    paddingTop: 60,
     paddingHorizontal: 16,
   },
   emptyState: {
@@ -197,22 +197,22 @@ const styles = StyleSheet.create({
     color: '#EF4444',
   },
   widgetWrapper: {
-    marginBottom: 16,
+    marginBottom: 24,
     width: '100%',
   },
   thumbnailWrapper: {
-    width: '47%', // Slightly less than half for better spacing
+    width: '47%',
     marginHorizontal: '1.5%',
-    marginBottom: 16,
+    marginBottom: 24,
   },
   thumbnailGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     width: '100%',
-    marginBottom: 16,
-    paddingHorizontal: 16,
-    paddingTop: 8,
+    marginBottom: 24,
+    paddingHorizontal: 0,
+    paddingTop: 0,
   },
   editOverlay: {
     position: 'absolute',

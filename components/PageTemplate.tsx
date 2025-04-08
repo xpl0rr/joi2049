@@ -5,7 +5,7 @@ import WidgetCard from '@/components/widgets/WidgetCard';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 
 const PageTemplate = ({ pageId }: { pageId: string }) => {
-  const { pages, editPageWidget, removePageWidget, movePageWidget } = useWidgets();
+  const { pages, removeWidget, moveWidgetUp, moveWidgetDown } = useWidgets();
   const [editingWidget, setEditingWidget] = useState<string | null>(null);
   const [loading, setLoading] = useState<string | null>(null);
   
@@ -24,21 +24,15 @@ const PageTemplate = ({ pageId }: { pageId: string }) => {
   };
   
   const handleRemoveWidget = (widgetId: string) => {
-    removePageWidget(pageId, widgetId);
+    removeWidget(pageId, widgetId);
   };
   
   const handleMoveWidgetUp = (widgetId: string) => {
-    const index = page.widgets.findIndex((w) => w.id === widgetId);
-    if (index > 0) {
-      movePageWidget(pageId, index, index - 1);
-    }
+    moveWidgetUp(pageId, widgetId);
   };
   
   const handleMoveWidgetDown = (widgetId: string) => {
-    const index = page.widgets.findIndex((w) => w.id === widgetId);
-    if (index < page.widgets.length - 1) {
-      movePageWidget(pageId, index, index + 1);
-    }
+    moveWidgetDown(pageId, widgetId);
   };
   
   const renderWidget = (widget: Widget, index: number) => {

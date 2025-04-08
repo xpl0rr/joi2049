@@ -367,12 +367,11 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
             return (
               <TouchableOpacity
                 key={index}
-                style={[
-                  styles.dayCell,
-                  day.isToday && styles.todayCell
-                ]}
+                style={styles.dayCell}
                 onPress={() => day.date && selectDay(day.date)}
               >
+                {day.isToday && <View style={styles.todayIndicator} />}
+                
                 {showNumber && (
                   <Text style={[
                     styles.dayText,
@@ -645,18 +644,24 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 8,
     position: 'relative',
   },
-  todayCell: {
-    // No border or background
+  todayIndicator: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderWidth: 1,
+    borderColor: '#000000',
+    borderRadius: 6,
+    backgroundColor: 'transparent',
+    zIndex: -1,
   },
   dayText: {
     fontSize: 14,
     color: '#334155',
     fontWeight: '500',
-    marginBottom: 0,
-    zIndex: 1, // Ensure text is above rings
   },
   todayText: {
     fontWeight: '500',

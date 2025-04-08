@@ -184,29 +184,29 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
           <View style={styles.actions}>
             {draggable && onMoveUp && !widget.isThumbnail && (
               <Pressable onPress={onMoveUp} style={styles.iconButton}>
-                <IconSymbol name="arrow.up" size={16} color="#1F2937" />
+                <IconSymbol name="arrow.up" size={16} color="#4D82F3" />
               </Pressable>
             )}
             {draggable && onMoveDown && !widget.isThumbnail && (
               <Pressable onPress={onMoveDown} style={styles.iconButton}>
-                <IconSymbol name="arrow.down" size={16} color="#1F2937" />
+                <IconSymbol name="arrow.down" size={16} color="#4D82F3" />
               </Pressable>
             )}
             <Pressable onPress={handleToggleThumbnail} style={styles.iconButton}>
               <IconSymbol 
                 name={widget.isThumbnail ? "arrow.up.left.and.arrow.down.right" : "arrow.down.right.and.arrow.up.left"} 
                 size={16} 
-                color="#1F2937" 
+                color="#4D82F3" 
               />
             </Pressable>
             {onEdit && !widget.isThumbnail && (
               <Pressable onPress={onEdit} style={styles.iconButton}>
-                <IconSymbol name="pencil" size={16} color="#1F2937" />
+                <IconSymbol name="pencil" size={16} color="#4D82F3" />
               </Pressable>
             )}
             {onRemove && !widget.isThumbnail && (
               <Pressable onPress={onRemove} style={styles.iconButton}>
-                <IconSymbol name="xmark" size={16} color="#1F2937" />
+                <IconSymbol name="xmark" size={16} color="#4D82F3" />
               </Pressable>
             )}
           </View>
@@ -233,15 +233,11 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
   },
   thumbnailContainer: {
     justifyContent: 'center',
     padding: 16,
     backgroundColor: '#F3F4F6',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
   },
   header: {
     flexDirection: 'row',

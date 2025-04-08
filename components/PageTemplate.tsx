@@ -1,105 +1,75 @@
-import React, { useState, useRef } from 'react';
-import { StyleSheet, Text, View, ScrollView, Pressable, Platform } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useWidgets, Page, Widget } from '@/contexts/WidgetContext';
-import WidgetCard from './widgets/WidgetCard';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
-import { IconSymbol } from './ui/IconSymbol';
-import ActivityEditForm from './widgets/ActivityEditForm';
-import NotesEditForm from './widgets/NotesEditForm';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, View, Text, ScrollView, ActivityIndicator, Pressable } from 'react-native';
+import { useWidgets, Widget } from '@/contexts/WidgetContext';
+import WidgetCard from '@/components/widgets/WidgetCard';
+import { IconSymbol } from '@/components/ui/IconSymbol';
 
-interface PageTemplateProps {
-  pageId: string;
-  onAddWidget?: () => void;
-}
-
-const PageTemplate: React.FC<PageTemplateProps> = ({ pageId, onAddWidget }) => {
-  const colorScheme = useColorScheme();
-  const { pages, removeWidget, updateWidgetConfig, moveWidgetUp, moveWidgetDown } = useWidgets();
-  const page = pages[pageId];
+const PageTemplate = ({ pageId }: { pageId: string }) => {
+  const { pages, editPageWidget, removePageWidget, movePageWidget } = useWidgets();
   const [editingWidget, setEditingWidget] = useState<string | null>(null);
-
-  // Handle moving a widget up in order
-  const handleMoveWidgetUp = (widgetId: string) => {
-    moveWidgetUp(pageId, widgetId);
-  };
+  const [loading, setLoading] = useState<string | null>(null);
   
-  // Handle moving a widget down in order
-  const handleMoveWidgetDown = (widgetId: string) => {
-    moveWidgetDown(pageId, widgetId);
-  };
-
-  const handleRemoveWidget = (widgetId: string) => {
-    removeWidget(pageId, widgetId);
-  };
-
-  const handleEditWidget = (widgetId: string) => {
-    setEditingWidget(widgetId);
-  };
-
-  // Render the appropriate edit form based on widget type
-  const renderEditForm = () => {
-    if (!editingWidget) return null;
-    
-    const widget = page.widgets.find(w => w.id === editingWidget);
-    if (!widget) return null;
-    
-    switch (widget.type) {
-      case 'activity':
-        return (
-          <ActivityEditForm 
-            config={widget.config} 
-            onUpdate={(newConfig) => {
-              updateWidgetConfig(pageId, editingWidget, newConfig);
-              setEditingWidget(null);
-            }}
-            onCancel={() => setEditingWidget(null)}
-          />
-        );
-      case 'notes':
-        return (
-          <NotesEditForm 
-            config={widget.config} 
-            onUpdate={(newConfig) => {
-              updateWidgetConfig(pageId, editingWidget, newConfig);
-              setEditingWidget(null);
-            }}
-            onCancel={() => setEditingWidget(null)}
-          />
-        );
-      default:
-        return (
-          <Text style={{ color: '#64748B', textAlign: 'center' }}>
-            Edit options for this widget type are not yet available.
-          </Text>
-        );
-    }
-  };
-
+  const page = pages[pageId];
+  
   if (!page) {
     return (
-      <View style={[styles.container, { backgroundColor: '#F9FAFB' }]}>
-        <Text style={[styles.error, { color: '#EF4444' }]}>
-          Page not found
-        </Text>
+      <View style={styles.container}>
+        <Text style={styles.error}>Page not found</Text>
       </View>
     );
   }
-
-  // Render each widget with appropriate props
+  
+  const handleEditWidget = (widgetId: string) => {
+    setEditingWidget(widgetId);
+  };
+  
+  const handleRemoveWidget = (widgetId: string) => {
+    removePageWidget(pageId, widgetId);
+  };
+  
+  const handleMoveWidgetUp = (widgetId: string) => {
+    const index = page.widgets.findIndex((w) => w.id === widgetId);
+    if (index > 0) {
+      movePageWidget(pageId, index, index - 1);
+    }
+  };
+  
+  const handleMoveWidgetDown = (widgetId: string) => {
+    const index = page.widgets.findIndex((w) => w.id === widgetId);
+    if (index < page.widgets.length - 1) {
+      movePageWidget(pageId, index, index + 1);
+    }
+  };
+  
   const renderWidget = (widget: Widget, index: number) => {
     const isFirstWidget = index === 0;
     const isLastWidget = index === page.widgets.length - 1;
     
+    // Style overrides directly inside the widget renderer
+    const borderStyle = {
+      borderWidth: 2,
+      borderColor: '#4D82F3', // App blue theme color
+      borderRadius: 12,
+      marginBottom: 16,
+    };
+    
+    if (widget.isThumbnail) {
+      return (
+        <View key={widget.id} style={[styles.thumbnailWrapper, borderStyle]}>
+          <WidgetCard
+            widget={widget}
+            onRemove={() => handleRemoveWidget(widget.id)}
+            onEdit={() => handleEditWidget(widget.id)}
+            draggable={true}
+            onMoveUp={!isFirstWidget ? () => handleMoveWidgetUp(widget.id) : undefined}
+            onMoveDown={!isLastWidget ? () => handleMoveWidgetDown(widget.id) : undefined}
+          />
+        </View>
+      );
+    }
+    
     return (
-      <View
-        key={widget.id}
-        style={[
-          styles.widgetWrapper,
-          widget.isThumbnail && styles.thumbnailWrapper
-        ]}
-      >
+      <View key={widget.id} style={[styles.widgetWrapper, borderStyle]}>
         <WidgetCard
           widget={widget}
           onRemove={() => handleRemoveWidget(widget.id)}
@@ -111,44 +81,36 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageId, onAddWidget }) => {
       </View>
     );
   };
-
-  // Group widgets into full-size and thumbnails
+  
+  // Group widgets by thumbnail status
   const groupWidgets = () => {
     const thumbnails: Widget[] = [];
     const fullWidgets: Widget[] = [];
-
-    page.widgets.forEach(widget => {
+    
+    page.widgets.forEach((widget) => {
       if (widget.isThumbnail) {
         thumbnails.push(widget);
       } else {
         fullWidgets.push(widget);
       }
     });
-
+    
     return { thumbnails, fullWidgets };
   };
-
+  
   const { thumbnails, fullWidgets } = groupWidgets();
-
+  
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>
-            {page.name}
-          </Text>
-          {onAddWidget && (
-            <Pressable
-              style={styles.addButton}
-              onPress={onAddWidget}
-            >
-              <IconSymbol name="plus" size={16} color="#FFFFFF" />
-              <Text style={styles.addButtonText}>Add Widget</Text>
-            </Pressable>
-          )}
+    <View style={styles.container}>
+      {loading ? (
+        <View style={styles.loadingOverlay}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#4D82F3" />
+            <Text style={styles.loadingText}>{loading}</Text>
+          </View>
         </View>
-        
-        <ScrollView 
+      ) : (
+        <ScrollView
           style={styles.scrollContainer}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
@@ -160,14 +122,6 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageId, onAddWidget }) => {
                 No widgets on this page yet.{'\n'}
                 Add widgets from the widget store.
               </Text>
-              {onAddWidget && (
-                <Pressable
-                  style={styles.emptyAddButton}
-                  onPress={onAddWidget}
-                >
-                  <Text style={styles.emptyAddButtonText}>Add Widget</Text>
-                </Pressable>
-              )}
             </View>
           ) : (
             <>
@@ -186,106 +140,54 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageId, onAddWidget }) => {
             </>
           )}
         </ScrollView>
-
-        {/* Widget Editor Modal */}
-        {editingWidget && (
-          <View style={styles.editOverlay}>
-            <View style={styles.editModal}>
-              <Text style={styles.editTitle}>
-                Edit Widget
-              </Text>
-              <Pressable
-                style={styles.closeEditor}
-                onPress={() => setEditingWidget(null)}
-              >
-                <IconSymbol name="xmark.circle.fill" size={24} color="#94A3B8" />
-              </Pressable>
-              
-              <ScrollView 
-                style={styles.editScrollView}
-                contentContainerStyle={styles.editScrollContent}
-              >
-                {renderEditForm()}
-              </ScrollView>
-            </View>
+      )}
+      
+      {editingWidget && (
+        <View style={styles.editOverlay}>
+          <View style={styles.editModal}>
+            <Text style={styles.editTitle}>Edit Widget</Text>
+            <Pressable style={styles.closeEditor} onPress={() => setEditingWidget(null)}>
+              <IconSymbol name="xmark" size={20} color="#64748B" />
+            </Pressable>
+            <ScrollView 
+              style={styles.editScrollView}
+              contentContainerStyle={styles.editScrollContent}
+            >
+              {/* Widget edit form would go here */}
+              <Text>Edit form for widget {editingWidget}</Text>
+            </ScrollView>
           </View>
-        )}
-      </View>
-    </SafeAreaView>
+        </View>
+      )}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#F9FAFB',
-  },
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#F8FAFC',
   },
-  header: {
-    padding: 20,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-    backgroundColor: '#FFFFFF',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#111827',
-  },
-  addButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    backgroundColor: '#4D82F3',
-  },
-  addButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '500',
-    marginLeft: 4,
-    fontSize: 14,
-  },
-  content: {
+  scrollContainer: {
     flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 16,
   },
-  contentContainer: {
-    paddingBottom: 16,
-    gap: 16,
-    minHeight: '100%',
+  scrollContent: {
+    paddingTop: 16,
+    paddingHorizontal: 16,
   },
   emptyState: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
-    marginTop: 100,
+    justifyContent: 'center',
+    padding: 24,
+    marginTop: 80,
   },
   emptyText: {
     fontSize: 16,
+    color: '#64748B',
+    textAlign: 'center',
     marginTop: 16,
     marginBottom: 24,
-    textAlign: 'center',
-    color: '#64748B',
-  },
-  emptyAddButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
-    backgroundColor: '#4D82F3',
-  },
-  emptyAddButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '500',
-    fontSize: 14,
   },
   error: {
     flex: 1,
@@ -347,12 +249,6 @@ const styles = StyleSheet.create({
     top: 16,
     right: 16,
   },
-  scrollContainer: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 16,
-  },
   editScrollView: {
     maxHeight: 400,
   },
@@ -361,6 +257,36 @@ const styles = StyleSheet.create({
   },
   bottomPadding: {
     height: 20,
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  loadingContainer: {
+    backgroundColor: '#FFFFFF',
+    padding: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    width: '80%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  loadingText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#334155',
+    marginTop: 16,
+    textTransform: 'capitalize',
   },
 });
 

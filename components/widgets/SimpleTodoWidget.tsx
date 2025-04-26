@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import * as FileSystem from 'expo-file-system';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface TodoItem {
   id: string;
@@ -36,38 +36,36 @@ const SimpleTodoWidget: React.FC<SimpleTodoWidgetProps> = ({ items: initialItems
     }
   }, [initialItems]);
   
-  // Path to store completed items
-  const completedItemsPath = FileSystem.documentDirectory + 'completed_todos.json';
+  // Key to store completed items in AsyncStorage
+  const COMPLETED_ITEMS_KEY = 'completed_todos';
 
   // Load completed items from storage when component mounts
   React.useEffect(() => {
     loadCompletedItems();
   }, []);
 
-  // Load completed items from file
+  // Load completed items from AsyncStorage
   const loadCompletedItems = async () => {
     try {
-      const fileInfo = await FileSystem.getInfoAsync(completedItemsPath);
-      if (fileInfo.exists) {
-        const fileContents = await FileSystem.readAsStringAsync(completedItemsPath);
-        setCompletedItems(JSON.parse(fileContents));
+      const stored = await AsyncStorage.getItem(COMPLETED_ITEMS_KEY);
+      if (stored) {
+        setCompletedItems(JSON.parse(stored));
       }
     } catch (error) {
       console.error('Error loading completed items:', error);
     }
   };
 
-  // Save completed items to file
+
+  // Save completed items to AsyncStorage
   const saveCompletedItems = async (updatedItems: CompletedItem[]) => {
     try {
-      await FileSystem.writeAsStringAsync(
-        completedItemsPath,
-        JSON.stringify(updatedItems)
-      );
+      await AsyncStorage.setItem(COMPLETED_ITEMS_KEY, JSON.stringify(updatedItems));
     } catch (error) {
       console.error('Error saving completed items:', error);
     }
   };
+
 
   const handleAddTodo = useCallback(() => {
     if (text.trim() === '') return;

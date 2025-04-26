@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "Joi2049",
+    "scheme": "jclearoi2049",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": false,
     "ios": {
@@ -20,7 +20,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.xplorr.Joi"
+      "package": "com.xplorr.Joi2049"
     },
     "web": {
       "bundler": "metro",
@@ -47,14 +47,15 @@
         "origin": false
       },
       "eas": {
-        "projectId": "8ec0e2a8-6465-4f6f-8ef9-5bce622c88d7"
+        "projectId": "b2cb2d41-1575-4569-b839-15b5aedb28fd"
       }
     },
     "runtimeVersion": {
       "policy": "appVersion"
     },
+    "owner": "xplorr",
     "updates": {
-      "url": "https://u.expo.dev/8ec0e2a8-6465-4f6f-8ef9-5bce622c88d7"
+      "url": "https://u.expo.dev/b2cb2d41-1575-4569-b839-15b5aedb28fd"
     }
   }
 }

@@ -1,16 +1,16 @@
 {
   "expo": {
-    "name": "Joi",
-    "slug": "Joi",
+    "name": "Joi2049",
+    "slug": "Joi2049",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "Joi2049",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": false,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.xplorr.Joi",
+      "bundleIdentifier": "com.xplorr.Joi2049",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }

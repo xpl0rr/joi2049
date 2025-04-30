@@ -46,16 +46,11 @@
     "assetBundlePatterns": [
       "**/*"
     ],
-    "updates": {
-      "fallbackToCacheTimeout": 0
-    },
+    
     "extra": {
       "router": {
         "origin": false
       },
-      "eas": {
-        "projectId": "3f046534-bb0d-4607-8a18-cc3765f6a064"
-      }
     }
   }
 }

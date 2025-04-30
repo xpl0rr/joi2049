@@ -1,14 +1,13 @@
 {
   "expo": {
-    "name": "Joi",
-    "slug": "joi",
+    "name": "Joi2049",
+    "slug": "joi2049",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "joi",
+    "scheme": "joi2049",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": false,
-
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.xplorr.Joi",
@@ -16,7 +15,6 @@
         "ITSAppUsesNonExemptEncryption": false
       }
     },
-
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
@@ -24,13 +22,11 @@
       },
       "package": "com.xplorr.Joi"
     },
-
     "web": {
       "bundler": "metro",
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
-
     "plugins": [
       "expo-router",
       [
@@ -43,16 +39,23 @@
         }
       ]
     ],
-
     "experiments": {
       "typedRoutes": true
     },
-
     "runtimeVersion": "1.0.0",
-    "assetBundlePatterns": ["**/*"],
-
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "updates": {
       "fallbackToCacheTimeout": 0
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "3f046534-bb0d-4607-8a18-cc3765f6a064"
+      }
     }
   }
 }

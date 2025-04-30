@@ -1,11 +1,11 @@
 {
   "expo": {
     "name": "Joi",
-    "slug": "Joi",
+    "slug": "joi",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "joi",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": false,
     "ios": {
@@ -47,14 +47,16 @@
         "origin": false
       },
       "eas": {
-        "projectId": "8ec0e2a8-6465-4f6f-8ef9-5bce622c88d7"
+        "projectId": "afa10f6a-dbed-4a23-ab8c-1eff82475d75"
       }
     },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
+    "runtimeVersion": "1.0.0",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "updates": {
-      "url": "https://u.expo.dev/8ec0e2a8-6465-4f6f-8ef9-5bce622c88d7"
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/afa10f6a-dbed-4a23-ab8c-1eff82475d75"
     }
   }
 }

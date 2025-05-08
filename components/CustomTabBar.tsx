@@ -108,12 +108,6 @@ export const CustomTabBar = () => {
           size={18} 
           color={isActive ? '#4D82F3' : '#94A3B8'} 
         />
-        <Text style={[
-          styles.tabLabel, 
-          isActive ? styles.activeLabel : styles.inactiveLabel
-        ]}>
-          {tab.title}
-        </Text>
       </TouchableOpacity>
     );
   };
@@ -134,12 +128,7 @@ export const CustomTabBar = () => {
             size={20} 
             color={isActive ? '#4D82F3' : '#333333'} 
           />
-          <Text style={[
-            styles.menuItemText,
-            isActive && { color: '#4D82F3', fontWeight: '600' }
-          ]}>
-            {tab.title}
-          </Text>
+          {/* Remove title from menu items for compactness */}
         </View>
       </TouchableOpacity>
     );

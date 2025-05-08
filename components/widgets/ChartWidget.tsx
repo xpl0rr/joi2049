@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, Dimensions, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, Dimensions } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import Svg, { Polyline } from 'react-native-svg';
 
 interface ChartData {
   label: string;
@@ -18,7 +19,7 @@ const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'S
 const MONTHS_LETTER = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
 
 const ChartWidget: React.FC<ChartWidgetProps> = ({ 
-  title = 'Bar Chart',
+  title = 'Line Chart',
   data = [],
   onUpdate 
 }) => {
@@ -75,31 +76,6 @@ const ChartWidget: React.FC<ChartWidgetProps> = ({
     );
   }
 
-  // Calculate optimal bar width for all 12 months to fit without scrolling
-  const getBarWidth = () => {
-    // Make sure we have space for all 12 months
-    const availableWidth = chartWidth - 30; // Account for some padding
-    const minBarSpacing = 3; // Minimum spacing between bars
-    const maxBarWidth = (availableWidth / chartData.length) - minBarSpacing;
-    
-    if (screenWidth < 360) {
-      // For very small screens
-      return Math.min(maxBarWidth, 14); 
-    } else if (screenWidth < 400) {
-      // For medium-small screens
-      return Math.min(maxBarWidth, 16);
-    } else {
-      // For larger screens
-      return Math.min(maxBarWidth, 18);
-    }
-  };
-
-  const barWidth = getBarWidth();
-  // Calculate dynamic spacing - spacing will adjust to fill available width
-  const totalBarsWidth = barWidth * chartData.length;
-  const remainingSpace = chartWidth - totalBarsWidth;
-  const barSpacing = remainingSpace / (chartData.length + 1);
-
   return (
     <View style={styles.container} onLayout={onContainerLayout}>
       <Text style={styles.title}>{title}</Text>
@@ -112,24 +88,24 @@ const ChartWidget: React.FC<ChartWidgetProps> = ({
         <Text style={styles.yAxisLabel}>0</Text>
       </View>
       
-      <View style={styles.chartScrollContent}>
-        <View style={styles.chartContainer}>
-          {chartData.map((item, index) => (
-            <View key={index} style={[styles.barContainer, { width: barWidth + barSpacing }]}>
-              <View 
-                style={[
-                  styles.bar, 
-                  { 
-                    height: `${(item.value / maxValue) * 100}%`,
-                    width: barWidth,
-                    backgroundColor: '#4D82F3',
-                  }
-                ]} 
-              />
-              <Text style={styles.barLabel}>{item.label.charAt(0)}</Text>
-            </View>
-          ))}
-        </View>
+      <View style={[styles.chartScrollContent, { paddingLeft: 30, paddingRight: 5 }]}>        
+        <Svg width={chartWidth} height={180}>
+          <Polyline
+            points={chartData.map((item, index) => 
+              `${(index * (chartWidth / (chartData.length - 1))).toFixed(2)},${
+                (180 - (item.value / maxValue) * 180).toFixed(2)
+              }`
+            ).join(' ')}
+            fill="none"
+            stroke="#4D82F3"
+            strokeWidth={2}
+          />
+        </Svg>
+      </View>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingLeft: 30, paddingRight: 5 }}>
+        {chartData.map((item, index) => (
+          <Text key={index} style={styles.barLabel}>{item.label}</Text>
+        ))}
       </View>
     </View>
   );
@@ -161,28 +137,6 @@ const styles = StyleSheet.create({
     height: 220,
     width: '100%',
   },
-  chartContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    height: 180,
-    marginLeft: 30, // Less space for Y-axis
-    paddingRight: 5,
-    justifyContent: 'space-between',
-  },
-  barContainer: {
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    height: '100%',
-  },
-  bar: {
-    borderTopLeftRadius: 3,
-    borderTopRightRadius: 3,
-  },
-  barLabel: {
-    marginTop: 6,
-    fontSize: 10,
-    color: '#6B7280',
-  },
   yAxisContainer: {
     position: 'absolute',
     left: 0,
@@ -196,6 +150,11 @@ const styles = StyleSheet.create({
     fontSize: 8,
     color: '#9CA3AF',
     marginRight: 4,
+  },
+  barLabel: {
+    marginTop: 6,
+    fontSize: 10,
+    color: '#6B7280',
   },
 });
 

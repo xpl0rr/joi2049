@@ -16,6 +16,7 @@ interface Bill {
   name: string;
   amount: number;
   frequency: Frequency;
+  createdMonth: number;
 }
 
 export default function FinanceScreen() {
@@ -59,15 +60,17 @@ export default function FinanceScreen() {
     if (!billName.trim() || !billAmount) return;
     const amount = parseFloat(billAmount);
     if (isNaN(amount)) return;
-    setBills(prev => [...prev, { id: Date.now().toString(), name: billName.trim(), amount, frequency }]);
+    setBills(prev => [...prev, { id: Date.now().toString(), name: billName.trim(), amount, frequency, createdMonth: new Date().getMonth() }]);
     closeModal();
   };
 
   const monthlyData = Array.from({ length: 12 }).map((_, i) => {
-    const sum = bills.reduce(
-      (acc, bill) => acc + (bill.frequency === 'monthly' ? bill.amount : bill.amount / 12),
-      0
-    );
+    const sum = bills.reduce((acc, bill) => {
+      if (bill.createdMonth === i) {
+        return acc + (bill.frequency === 'monthly' ? bill.amount : bill.amount / 12);
+      }
+      return acc;
+    }, 0);
     const labels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     return { label: labels[i], value: parseFloat(sum.toFixed(2)) };
   });

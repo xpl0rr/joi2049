@@ -104,7 +104,7 @@ const ChartWidget: React.FC<ChartWidgetProps> = ({
       </View>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingLeft: 30, paddingRight: 5 }}>
         {chartData.map((item, index) => (
-          <Text key={index} style={styles.barLabel}>{item.label}</Text>
+          <Text key={index} style={styles.barLabel}>{item.label.charAt(0)}</Text>
         ))}
       </View>
     </View>

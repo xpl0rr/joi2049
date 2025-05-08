@@ -1,5 +1,5 @@
 //  CalendarDashboard.tsx
-import { Calendar, DateObject } from 'react-native-calendars';
+import { Calendar } from 'react-native-calendars';
 import { View, TouchableOpacity } from 'react-native';
 import { useCalendarStore, ActivityKey, CalendarState } from './calendarStore';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,7 +21,7 @@ export default function CalendarDashboard() {
             { customStyles: { container: {}, text: {} } }, // keep default style
           ])
         )}
-        dayComponent={({ date }: { date: DateObject }) => (
+        dayComponent={({ date }) => (
           <TouchableOpacity onPress={() => setSelected(date.dateString)}>
             <DayRings rings={db?.[date.dateString]?.rings} date={date} />
           </TouchableOpacity>

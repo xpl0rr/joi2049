@@ -55,7 +55,7 @@ export const useCalendarStore = create<CalendarState>()(
       }),
       {
         name: 'calendar-db',     // key in AsyncStorage
-        storage: AsyncStorage,
+        getStorage: () => AsyncStorage,
       },
     ),
     { name: 'calendarStore' },  // appears in Redux DevTools

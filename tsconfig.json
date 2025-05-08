@@ -10,6 +10,11 @@
     "allowJs": true,
     "noImplicitAny": false
   },
-  "include": ["app", "expo-env.d.ts", ".expo/types"],
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
+  ],
   "exclude": ["node_modules", "dist", ".expo", ".git"]
 }

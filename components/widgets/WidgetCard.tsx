@@ -69,13 +69,13 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
   
   // Widget size styles
   const sizeStyles = {
-    small: { width: '100%', height: 130 },
-    medium: { width: '100%', height: 350 },
-    large: { width: '100%', height: 400 },
+    small: { flex: 1, height: 130 },
+    medium: { flex: 1, height: 350 },
+    large: { flex: 1, height: 400 },
   };
   
   // Thumbnail style - approximately 1/2 of screen width
-  const thumbnailStyle = { width: '100%', height: 110 };
+  const thumbnailStyle = { flex: 1, height: 110 };
   
   // Use thumbnail or standard styles based on widget state
   const widgetStyles = widget.isThumbnail ? thumbnailStyle : sizeStyles[widget.size];
@@ -148,15 +148,15 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
         />;
       default:
         return (
-          <Text style={[styles.placeholder, { color: '#64748B' }]}>
-            {widget.type.charAt(0).toUpperCase() + widget.type.slice(1)} widget
+          <Text style={[styles.placeholder, { color: '#64748B' }]}> 
+            {widget.title} widget
           </Text>
         );
     }
   };
 
   return (
-    <Animated.View style={[animatedStyle, { width: '100%' }]}>
+    <Animated.View style={[animatedStyle, { flex: 1 }]}>
       <View 
         style={[
           styles.container, 

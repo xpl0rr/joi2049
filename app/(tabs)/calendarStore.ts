@@ -1,37 +1,69 @@
-import { create } from 'zustand';
-import { devtools, persist } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+// app.config.js
+export default {
+  /* ── basic app info ── */
+  name: 'Joi2049',
+  slug: 'joi2049',
+  version: '1.0.0',
+  orientation: 'portrait',
+  icon: './assets/images/icon.png',
+  scheme: 'joi2049',
+  userInterfaceStyle: 'automatic',
+  newArchEnabled: false,
 
-export type ActivityKey = 'workout' | 'todo' | 'guitar' | 'custom4';
+  /* ── OTA / updates ── */
+  updates: { enabled: false },
 
-export interface CalendarDB {
-  [date: string]: {
-    rings: Record<ActivityKey, boolean>;
-  };
-}
+  /* ── iOS ── */
+  ios: {
+    supportsTablet: true,
+    bundleIdentifier: 'com.xplorr.Joi',
+    infoPlist: { ITSAppUsesNonExemptEncryption: false },
+  },
 
-export interface CalendarState {
-  db: CalendarDB;
-  toggleRing: (date: string, key: ActivityKey) => void;
-}
+  /* ── Android ── */
+  android: {
+    adaptiveIcon: {
+      foregroundImage: './assets/images/adaptive-icon.png',
+      backgroundColor: '#ffffff',
+    },
+    package: 'com.xplorr.Joi',
+  },
 
-export const useCalendarStore = create<CalendarState>(
-  devtools(
-    persist<CalendarState>(
-      (set, get) => ({
-        db: {},
-        toggleRing: (date: string, key: ActivityKey) => {
-          const { db } = get();
-          const day = db[date] ?? { rings: {} as Record<ActivityKey, boolean> };
-          const rings = { ...day.rings, [key]: !day.rings[key] };
-          set({ db: { ...db, [date]: { rings } } });
-        },
-      }),
+  /* ── Web ── */
+  web: {
+    bundler: 'metro',
+    output: 'static',
+    favicon: './assets/images/favicon.png',
+  },
+
+  /* ── Plugins ── */
+  plugins: [
+    'expo-router',
+    [
+      'expo-splash-screen',
       {
-        name: 'calendar',
-        getStorage: () => AsyncStorage,
-      }
-    ),
-    { name: 'calendar-devtools' }
-  )
-);
+        image: './assets/images/splash-icon.png',
+        imageWidth: 200,
+        resizeMode: 'contain',
+        backgroundColor: '#ffffff',
+      },
+    ],
+    'expo-dev-client',
+  ],
+
+  /* ── Experiments ── */
+  experiments: { typedRoutes: true },
+
+  /* ── Runtime & assets ── */
+  runtimeVersion: '1.0.0',
+  assetBundlePatterns: ['**/*'],
+
+  /* ── Extra ── */
+  extra: {
+    router: { origin: false },
+    eas: { projectId: 'd52e7dc8-b81f-495f-a4c3-15fb85e04cb4' }, // ← new ID
+  },
+
+  /* ── Expo owner ── */
+  owner: 'xplorr',
+};

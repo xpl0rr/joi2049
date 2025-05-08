@@ -1,9 +1,6 @@
 // app.config.js
-export default ({ config }) => ({
-    // keep Expo’s defaults plus your customisations
-    ...config,
-  
-    /** ── basic app info ── */
+export default {
+    /* ── basic app info ── */
     name: 'Joi2049',
     slug: 'joi2049',
     version: '1.0.0',
@@ -13,21 +10,17 @@ export default ({ config }) => ({
     userInterfaceStyle: 'automatic',
     newArchEnabled: false,
   
-    /** ── OTA/updates ── */
-    updates: {
-      enabled: false,
-    },
+    /* ── OTA / updates ── */
+    updates: { enabled: false },
   
-    /** ── iOS ── */
+    /* ── iOS ── */
     ios: {
       supportsTablet: true,
       bundleIdentifier: 'com.xplorr.Joi',
-      infoPlist: {
-        ITSAppUsesNonExemptEncryption: false,
-      },
+      infoPlist: { ITSAppUsesNonExemptEncryption: false },
     },
   
-    /** ── Android ── */
+    /* ── Android ── */
     android: {
       adaptiveIcon: {
         foregroundImage: './assets/images/adaptive-icon.png',
@@ -36,14 +29,14 @@ export default ({ config }) => ({
       package: 'com.xplorr.Joi',
     },
   
-    /** ── Web ── */
+    /* ── Web ── */
     web: {
       bundler: 'metro',
       output: 'static',
       favicon: './assets/images/favicon.png',
     },
   
-    /** ── Plugins ── */
+    /* ── Plugins ── */
     plugins: [
       'expo-router',
       [
@@ -55,25 +48,22 @@ export default ({ config }) => ({
           backgroundColor: '#ffffff',
         },
       ],
-      'expo-dev-client', // ← added so your custom dev client recognises the QR
+      'expo-dev-client',
     ],
   
-    /** ── Experiments ── */
-    experiments: {
-      typedRoutes: true,
-    },
+    /* ── Experiments ── */
+    experiments: { typedRoutes: true },
   
-    /** ── Runtime & assets ── */
+    /* ── Runtime & assets ── */
     runtimeVersion: '1.0.0',
     assetBundlePatterns: ['**/*'],
   
-    /** ── Extra ── */
-    
-      eas: {
-        projectId: 'e37a7eed-7207-4be0-ae58-eb26a8656660',
-      },
+    /* ── Extra ── */
+    extra: {
+      router: { origin: false },
+      // EAS will write a new projectId here after you run `eas build:configure`
     },
   
-    /** ── Owner (Expo account) ── */
+    /* ── Expo owner ── */
     owner: 'xplorr',
-  });
+  };

@@ -56,8 +56,8 @@ export default function FinanceScreen() {
           <IconSymbol name="plus" size={20} color="#FFF" />
         </Pressable>
       </View>
-      <ChartWidget data={monthlyData} onUpdate={() => {}} />
       <FlatList
+        style={{ flex: 1 }}
         data={bills}
         keyExtractor={item => item.id}
         renderItem={({ item }) => (
@@ -71,7 +71,7 @@ export default function FinanceScreen() {
         ListEmptyComponent={<Text style={styles.emptyText}>No bills added.</Text>}
         contentContainerStyle={bills.length === 0 ? { flex: 1, justifyContent: 'center' } : undefined}
       />
-
+      <ChartWidget data={monthlyData} onUpdate={() => {}} />
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>

@@ -18,7 +18,7 @@ export interface CalendarState {
 export const useCalendarStore = create<CalendarState>(
   devtools(
     persist<CalendarState>(
-      (set: (partial: Partial<CalendarState> | ((state: CalendarState) => Partial<CalendarState>), replace?: boolean) => void, get: () => CalendarState) => ({
+      (set, get) => ({
         db: {},
         toggleRing: (date: string, key: ActivityKey) => {
           const { db } = get();

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, Modal, Pressable, TextInput, FlatList } from 'react-native';
+import { StyleSheet, View, Text, Modal, Pressable, TextInput, FlatList, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import ChartWidget from '@/components/widgets/ChartWidget';
+import ChartWidget, { BillEntry } from '@/components/widgets/ChartWidget';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { IconSymbol } from '@/components/ui/IconSymbol';
@@ -17,6 +17,7 @@ interface Bill {
   amount: number;
   frequency: Frequency;
   createdMonth: number;
+  recurring: boolean;
 }
 
 export default function FinanceScreen() {
@@ -60,20 +61,32 @@ export default function FinanceScreen() {
     if (!billName.trim() || !billAmount) return;
     const amount = parseFloat(billAmount);
     if (isNaN(amount)) return;
-    setBills(prev => [...prev, { id: Date.now().toString(), name: billName.trim(), amount, frequency, createdMonth: new Date().getMonth() }]);
+    setBills(prev => [...prev, { id: Date.now().toString(), name: billName.trim(), amount, frequency, createdMonth: new Date().getMonth(), recurring: false }]);
     closeModal();
+  };
+
+  const removeBill = (id: string) => {
+    setBills(prev => prev.filter(bill => bill.id !== id));
+  };
+
+  const toggleRecurring = (id: string) => {
+    setBills(prev => prev.map(bill => bill.id === id ? { ...bill, recurring: !bill.recurring } : bill));
   };
 
   const monthlyData = Array.from({ length: 12 }).map((_, i) => {
     const sum = bills.reduce((acc, bill) => {
-      if (bill.createdMonth === i) {
-        return acc + (bill.frequency === 'monthly' ? bill.amount : bill.amount / 12);
-      }
-      return acc;
+      const include = bill.createdMonth === i || (bill.recurring && bill.createdMonth <= i);
+      return acc + (include ? (bill.frequency === 'monthly' ? bill.amount : bill.amount / 12) : 0);
     }, 0);
     const labels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     return { label: labels[i], value: parseFloat(sum.toFixed(2)) };
   });
+
+  // Transform monthly aggregates into BillEntry format
+  const chartEntries: BillEntry[] = monthlyData.map((item, i) => ({
+    date: new Date(new Date().getFullYear(), i, 1),
+    amount: item.value,
+  }));
 
   return (
     <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: Colors.light.background }]}>      
@@ -89,14 +102,20 @@ export default function FinanceScreen() {
         keyExtractor={item => item.id}
         renderItem={({ item }) => (
           <View style={styles.billItem}>
-            <Text style={[styles.billText, { color: '#000' }]}>{item.name} ({item.frequency})</Text>
-            <Text style={[styles.billText, { color: '#000' }]}>${item.amount.toFixed(2)}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Switch value={item.recurring} onValueChange={() => toggleRecurring(item.id)} thumbColor={item.recurring ? '#4D82F3' : undefined} />
+              <Text style={[styles.billText, { color: '#000', marginLeft: 8 }]}>{item.name} ({item.frequency})</Text>
+              <Text style={[styles.billText, { color: '#000', marginLeft: 8 }]}>{`$${item.amount.toFixed(2)}`}</Text>
+            </View>
+            <Pressable onPress={() => removeBill(item.id)} style={{ padding: 4 }}>
+              <IconSymbol name="trash" size={20} color="#EF4444" />
+            </Pressable>
           </View>
         )}
         ListEmptyComponent={<Text style={styles.emptyText}>No bills added.</Text>}
         contentContainerStyle={bills.length === 0 ? { flex: 1, justifyContent: 'center' } : undefined}
       />
-      <ChartWidget title="Bills Over Time" data={monthlyData} onUpdate={() => {}} />
+      <ChartWidget title="Bills Over Time" data={chartEntries} onUpdate={() => {}} />
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>

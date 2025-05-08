@@ -4,7 +4,11 @@
     "strict": true,
     "paths": {
       "@/*": ["./*"]
-    }
+    },
+    "moduleResolution": "node",
+    "skipLibCheck": true,
+    "allowJs": true,
+    "noImplicitAny": false
   },
   "include": ["app", "expo-env.d.ts", ".expo/types"],
   "exclude": ["node_modules", "dist", ".expo", ".git"]

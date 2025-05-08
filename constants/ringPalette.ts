@@ -1,1 +1,8 @@
-export const ringPalette = ['#FF3B30', '#FFFFFF', '#000000'];
+import { Colors } from '@/constants/Colors';
+
+export const ringPalette = [
+  Colors.light.tint,
+  Colors.light.success,
+  Colors.light.error,
+  Colors.light.icon,
+];

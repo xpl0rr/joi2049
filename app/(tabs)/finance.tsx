@@ -121,7 +121,7 @@ export default function FinanceScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
-  header: { position: 'relative', flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginBottom: 12 },
+  header: { position: 'relative', flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginTop: 16, marginBottom: 12 },
   title: { position: 'absolute', left: 16, right: 16, textAlign: 'center', fontSize: 18, fontWeight: '600' },
   addButton: { width: 32, height: 32, backgroundColor: '#4D82F3', borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   billItem: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },

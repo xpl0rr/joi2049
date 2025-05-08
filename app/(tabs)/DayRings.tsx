@@ -1,6 +1,7 @@
 //  DayRings.tsx
 import Svg, { Circle, Text } from 'react-native-svg';
 import { ringPalette } from '@/constants/ringPalette';
+import { ActivityKey } from './calendarStore';
 const size = 34;
 const stroke = 3;
 const gap = 1.5;

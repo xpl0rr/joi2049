@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, Modal, Pressable, TextInput, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import ChartWidget from '@/components/widgets/ChartWidget';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+
+const STORAGE_KEY = '@bills';
 
 type Frequency = 'monthly' | 'annual';
 
@@ -22,6 +25,27 @@ export default function FinanceScreen() {
   const [billName, setBillName] = useState('');
   const [billAmount, setBillAmount] = useState('');
   const [frequency, setFrequency] = useState<Frequency>('monthly');
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const json = await AsyncStorage.getItem(STORAGE_KEY);
+        if (json) setBills(JSON.parse(json));
+      } catch (e) {
+        console.error('Failed to load bills', e);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(bills));
+      } catch (e) {
+        console.error('Failed to save bills', e);
+      }
+    })();
+  }, [bills]);
 
   const openModal = () => setModalVisible(true);
   const closeModal = () => {

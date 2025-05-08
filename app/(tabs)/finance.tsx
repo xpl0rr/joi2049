@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, Text, Modal, Pressable, TextInput, FlatList } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import ChartWidget from '@/components/widgets/ChartWidget';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -17,7 +17,6 @@ interface Bill {
 
 export default function FinanceScreen() {
   const colorScheme = useColorScheme();
-  const insets = useSafeAreaInsets();
   const [bills, setBills] = useState<Bill[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [billName, setBillName] = useState('');
@@ -50,7 +49,7 @@ export default function FinanceScreen() {
   });
 
   return (
-    <SafeAreaView edges={['top']} style={[styles.container, { paddingTop: insets.top, backgroundColor: colorScheme === 'dark' ? Colors.dark.background : Colors.light.background }]}>      
+    <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: colorScheme === 'dark' ? Colors.dark.background : Colors.light.background }]}>      
       <View style={styles.header}>
         <Text style={[styles.title, { color: colorScheme === 'dark' ? Colors.dark.text : Colors.light.text }]}>Bills</Text>
         <Pressable onPress={openModal} style={styles.addButton}>
@@ -121,7 +120,7 @@ export default function FinanceScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
-  header: { position: 'relative', flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginTop: 16, marginBottom: 12 },
+  header: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginTop: 16, marginBottom: 12 },
   title: { position: 'absolute', left: 16, right: 16, textAlign: 'center', fontSize: 18, fontWeight: '600' },
   addButton: { width: 32, height: 32, backgroundColor: '#4D82F3', borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   billItem: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },

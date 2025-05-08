@@ -105,7 +105,7 @@ export const CustomTabBar = () => {
       >
         <IconSymbol 
           name={tab.icon} 
-          size={18} 
+          size={36} 
           color={isActive ? '#4D82F3' : '#94A3B8'} 
         />
       </TouchableOpacity>
@@ -125,7 +125,7 @@ export const CustomTabBar = () => {
         <View style={styles.menuItemContent}>
           <IconSymbol 
             name={tab.icon} 
-            size={20} 
+            size={40} 
             color={isActive ? '#4D82F3' : '#333333'} 
           />
           {/* Remove title from menu items for compactness */}
@@ -146,7 +146,7 @@ export const CustomTabBar = () => {
             style={styles.moreIndicator}
             onPress={handleMorePress}
           >
-            <IconSymbol name="ellipsis" size={18} color="#94A3B8" />
+            <IconSymbol name="ellipsis" size={36} color="#94A3B8" />
           </TouchableOpacity>
         </View>
 

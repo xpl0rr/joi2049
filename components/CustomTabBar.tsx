@@ -12,14 +12,14 @@ import {
   FlatList
 } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
-import { IconSymbol } from './ui/IconSymbol';
+import { IconSymbol, IconSymbolName } from './ui/IconSymbol';
 import { useWidgets } from '@/contexts/WidgetContext';
 import { hapticFeedback } from './HapticTab';
 
 interface Tab {
   name: string;
   route: string;
-  icon: string;
+  icon: IconSymbolName;
   title: string;
 }
 

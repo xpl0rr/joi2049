@@ -15,6 +15,7 @@ interface PageTemplateProps {
 }
 
 const PageTemplate: React.FC<PageTemplateProps> = ({ pageId, onAddWidget }) => {
+  const isDashboard = pageId === 'dashboard';
   const colorScheme = useColorScheme();
   const { pages, removeWidget, updateWidgetConfig, moveWidgetUp, moveWidgetDown } = useWidgets();
   const page = pages[pageId];
@@ -133,8 +134,8 @@ const PageTemplate: React.FC<PageTemplateProps> = ({ pageId, onAddWidget }) => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>
+        <View style={isDashboard ? styles.dashboardHeader : styles.header}>
+          <Text style={isDashboard ? styles.dashboardTitle : styles.title}>
             {page.name}
           </Text>
           {onAddWidget && (
@@ -233,10 +234,26 @@ const styles = StyleSheet.create({
     borderBottomColor: '#E5E7EB',
     backgroundColor: '#FFFFFF',
   },
+  dashboardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    marginTop: 16,
+    marginBottom: 12,
+  },
   title: {
     fontSize: 20,
     fontWeight: '700',
     color: '#111827',
+  },
+  dashboardTitle: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    textAlign: 'center',
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#000',
   },
   addButton: {
     flexDirection: 'row',

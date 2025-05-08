@@ -111,7 +111,7 @@ const defaultWidgets: Widget[] = [
 const defaultPages: Record<string, Page> = {
   dashboard: {
     id: 'dashboard',
-    name: 'Dashboard',
+    name: 'Relentless',
     customizable: false, // Can't delete the dashboard
     widgets: [
       { ...defaultWidgets[2], id: `${defaultWidgets[2].id}-1`, size: 'medium' },

@@ -75,7 +75,7 @@ export default function FinanceScreen() {
   return (
     <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: Colors.light.background }]}>      
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colorScheme === 'dark' ? Colors.dark.text : Colors.light.text }]}>Bills</Text>
+        <Text style={[styles.title, { color: '#000' }]}>Bills</Text>
         <Pressable onPress={openModal} style={styles.addButton}>
           <IconSymbol name="plus" size={20} color="#FFF" />
         </Pressable>
@@ -86,16 +86,14 @@ export default function FinanceScreen() {
         keyExtractor={item => item.id}
         renderItem={({ item }) => (
           <View style={styles.billItem}>
-            <Text style={[styles.billText, { color: colorScheme === 'dark' ? Colors.dark.text : Colors.light.text }]}>
-              {item.name} ({item.frequency})
-            </Text>
-            <Text style={[styles.billText, { color: colorScheme === 'dark' ? Colors.dark.text : Colors.light.text }]}>${item.amount.toFixed(2)}</Text>
+            <Text style={[styles.billText, { color: '#000' }]}>{item.name} ({item.frequency})</Text>
+            <Text style={[styles.billText, { color: '#000' }]}>${item.amount.toFixed(2)}</Text>
           </View>
         )}
         ListEmptyComponent={<Text style={styles.emptyText}>No bills added.</Text>}
         contentContainerStyle={bills.length === 0 ? { flex: 1, justifyContent: 'center' } : undefined}
       />
-      <ChartWidget data={monthlyData} onUpdate={() => {}} />
+      <ChartWidget title="Bills Over Time" data={monthlyData} onUpdate={() => {}} />
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>

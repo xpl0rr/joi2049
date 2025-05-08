@@ -25,7 +25,7 @@ const ChartWidget: React.FC<ChartWidgetProps> = ({
 }) => {
   const colorScheme = useColorScheme();
   const [isLoading, setIsLoading] = useState(true);
-  const [maxValue, setMaxValue] = useState(0);
+  const [maxValue, setMaxValue] = useState(1);
   const [chartWidth, setChartWidth] = useState(Dimensions.get('window').width - 60);
   const screenWidth = Dimensions.get('window').width;
 
@@ -50,22 +50,21 @@ const ChartWidget: React.FC<ChartWidgetProps> = ({
   // Calculate max value for chart scaling
   useEffect(() => {
     if (chartData.length > 0) {
-      const max = Math.max(...chartData.map(item => item.value));
-      setMaxValue(Math.ceil(max / 100) * 100); // Round up to nearest 100
+      const values = chartData.map(item => item.value);
+      const max = Math.max(...values);
+      setMaxValue(isFinite(max) && max > 0 ? Math.ceil(max / 100) * 100 : 1);
     }
-    
-    // Show loading state briefly
+
     const loadingTimeout = setTimeout(() => {
       setIsLoading(false);
     }, 500);
-    
+
     return () => clearTimeout(loadingTimeout);
   }, [chartData]);
 
-  // Function to measure container width
   const onContainerLayout = (event: any) => {
     const { width } = event.nativeEvent.layout;
-    setChartWidth(width - 45); // Reduce left margin for more space
+    setChartWidth(width - 45);
   };
 
   if (isLoading) {
@@ -79,7 +78,7 @@ const ChartWidget: React.FC<ChartWidgetProps> = ({
   return (
     <View style={styles.container} onLayout={onContainerLayout}>
       <Text style={styles.title}>{title}</Text>
-      
+
       <View style={styles.yAxisContainer}>
         <Text style={styles.yAxisLabel}>{maxValue}</Text>
         <Text style={styles.yAxisLabel}>{Math.round(maxValue * 0.75)}</Text>
@@ -87,15 +86,16 @@ const ChartWidget: React.FC<ChartWidgetProps> = ({
         <Text style={styles.yAxisLabel}>{Math.round(maxValue * 0.25)}</Text>
         <Text style={styles.yAxisLabel}>0</Text>
       </View>
-      
+
       <View style={[styles.chartScrollContent, { paddingLeft: 30, paddingRight: 5 }]}>        
         <Svg width={chartWidth} height={180}>
           <Polyline
-            points={chartData.map((item, index) => 
-              `${(index * (chartWidth / (chartData.length - 1))).toFixed(2)},${
-                (180 - (item.value / maxValue) * 180).toFixed(2)
-              }`
-            ).join(' ')}
+            points={chartData.map((item, index) => {
+              const x = index * (chartWidth / (chartData.length - 1));
+              const y = maxValue > 0 ? (180 - (item.value / maxValue) * 180) : 180;
+              if (isNaN(x) || isNaN(y)) return `0,0`;
+              return `${x.toFixed(2)},${y.toFixed(2)}`;
+            }).join(' ')}
             fill="none"
             stroke="#4D82F3"
             strokeWidth={2}
@@ -122,7 +122,9 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '700',
     marginBottom: 12,
-    color: '#1F2937',
+    color: '#000',
+    textAlign: 'center',
+    alignSelf: 'center',
   },
   loadingContainer: {
     flex: 1,
@@ -158,4 +160,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ChartWidget; 
+export default ChartWidget;

@@ -68,10 +68,7 @@ export default ({ config }) => ({
     assetBundlePatterns: ['**/*'],
   
     /** ── Extra ── */
-    extra: {
-      router: {
-        origin: false,
-      },
+    
       eas: {
         projectId: 'e37a7eed-7207-4be0-ae58-eb26a8656660',
       },

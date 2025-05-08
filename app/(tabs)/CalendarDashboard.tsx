@@ -1,14 +1,15 @@
 //  CalendarDashboard.tsx
 import { Calendar } from 'react-native-calendars';
 import { View, TouchableOpacity } from 'react-native';
-import { useCalendarStore, ActivityKey } from './calendarStore';
+import { useCalendarStore, ActivityKey, CalendarState } from './calendarStore';
 import { Ionicons } from '@expo/vector-icons';
 import DayRings from './DayRings';          // ring component (see below)
 import AddSheet from './AddSheet';          // bottom-sheet component
+import { useState } from 'react';
 
 export default function CalendarDashboard() {
-  const db = useCalendarStore(state => state.db);
-  const toggleRing = useCalendarStore(state => state.toggleRing);
+  const db = useCalendarStore((state: CalendarState) => state.db);
+  const toggleRing = useCalendarStore((state: CalendarState) => state.toggleRing);
   const [selected, setSelected] = useState<string>();
 
   return (

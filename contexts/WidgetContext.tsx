@@ -114,9 +114,7 @@ const defaultPages: Record<string, Page> = {
     name: 'Relentless',
     customizable: false, // Can't delete the dashboard
     widgets: [
-      { ...defaultWidgets[2], id: `${defaultWidgets[2].id}-1`, size: 'medium' },
-      { ...defaultWidgets[0], id: `${defaultWidgets[0].id}-1`, size: 'medium' },
-      { ...defaultWidgets[1], id: `${defaultWidgets[1].id}-1`, size: 'medium' },
+      { ...defaultWidgets[3], id: `${defaultWidgets[3].id}-1`, size: 'medium' },
     ],
   },
   health: { 
@@ -135,9 +133,7 @@ const defaultPages: Record<string, Page> = {
     id: 'todo', 
     name: 'Todo', 
     customizable: true,
-    widgets: [
-      { ...defaultWidgets[1], id: `${defaultWidgets[1].id}-2`, size: 'medium' },
-    ] 
+    widgets: [] 
   },
 };
 
@@ -159,9 +155,14 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
         if (storedPagesJson) {
           console.log('Found stored data in AsyncStorage');
           const storedPages = JSON.parse(storedPagesJson);
-          // Ensure dashboard title is up-to-date
+          // Ensure dashboard title and widgets are up-to-date
           if (storedPages.dashboard) {
             storedPages.dashboard.name = defaultPages.dashboard.name;
+            storedPages.dashboard.widgets = defaultPages.dashboard.widgets;
+          }
+          // Clear todo widgets
+          if (storedPages.todo) {
+            storedPages.todo.widgets = [];
           }
           setPages(storedPages);
         } else {

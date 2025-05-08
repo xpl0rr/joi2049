@@ -21,10 +21,6 @@ export default function TabLayout() {
         options={{ href: "/todo" }}
       />
       <Tabs.Screen 
-        name="widgets" 
-        options={{ href: "/widgets" }}
-      />
-      <Tabs.Screen 
         name="custom/[id]" 
         options={{ href: null }}
       />

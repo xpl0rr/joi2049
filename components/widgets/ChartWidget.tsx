@@ -51,8 +51,14 @@ const ChartWidget: React.FC<ChartWidgetProps> = ({
   useEffect(() => {
     if (chartData.length > 0) {
       const values = chartData.map(item => item.value);
-      const max = Math.max(...values);
-      setMaxValue(isFinite(max) && max > 0 ? Math.ceil(max / 100) * 100 : 1);
+      const maxVal = Math.max(...values);
+      let roundedMax = 1;
+      if (maxVal > 0) {
+        const exponent = Math.floor(Math.log10(maxVal));
+        const magnitude = Math.pow(10, exponent);
+        roundedMax = Math.ceil(maxVal / magnitude) * magnitude;
+      }
+      setMaxValue(roundedMax);
     }
 
     const loadingTimeout = setTimeout(() => {

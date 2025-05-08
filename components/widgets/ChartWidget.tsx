@@ -52,13 +52,7 @@ const ChartWidget: React.FC<ChartWidgetProps> = ({
     if (chartData.length > 0) {
       const values = chartData.map(item => item.value);
       const maxVal = Math.max(...values);
-      let roundedMax = 1;
-      if (maxVal > 0) {
-        const exponent = Math.floor(Math.log10(maxVal));
-        const magnitude = Math.pow(10, exponent);
-        roundedMax = Math.ceil(maxVal / magnitude) * magnitude;
-      }
-      setMaxValue(roundedMax);
+      setMaxValue(maxVal);
     }
 
     const loadingTimeout = setTimeout(() => {
@@ -86,10 +80,10 @@ const ChartWidget: React.FC<ChartWidgetProps> = ({
       <Text style={styles.title}>{title}</Text>
 
       <View style={styles.yAxisContainer}>
-        <Text style={styles.yAxisLabel}>{maxValue}</Text>
-        <Text style={styles.yAxisLabel}>{Math.round(maxValue * 0.75)}</Text>
-        <Text style={styles.yAxisLabel}>{Math.round(maxValue * 0.5)}</Text>
-        <Text style={styles.yAxisLabel}>{Math.round(maxValue * 0.25)}</Text>
+        <Text style={styles.yAxisLabel}>{maxValue.toFixed(2)}</Text>
+        <Text style={styles.yAxisLabel}>{(maxValue * 0.75).toFixed(2)}</Text>
+        <Text style={styles.yAxisLabel}>{(maxValue * 0.5).toFixed(2)}</Text>
+        <Text style={styles.yAxisLabel}>{(maxValue * 0.25).toFixed(2)}</Text>
         <Text style={styles.yAxisLabel}>0</Text>
       </View>
 

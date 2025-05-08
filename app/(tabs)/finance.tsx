@@ -9,13 +9,10 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 
 const STORAGE_KEY = '@bills';
 
-type Frequency = 'monthly' | 'annual';
-
 interface Bill {
   id: string;
   name: string;
   amount: number;
-  frequency: Frequency;
   createdMonth: number;
   recurring: boolean;
 }
@@ -26,7 +23,6 @@ export default function FinanceScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [billName, setBillName] = useState('');
   const [billAmount, setBillAmount] = useState('');
-  const [frequency, setFrequency] = useState<Frequency>('monthly');
 
   useEffect(() => {
     (async () => {
@@ -54,14 +50,13 @@ export default function FinanceScreen() {
     setModalVisible(false);
     setBillName('');
     setBillAmount('');
-    setFrequency('monthly');
   };
 
   const addBill = () => {
     if (!billName.trim() || !billAmount) return;
     const amount = parseFloat(billAmount);
     if (isNaN(amount)) return;
-    setBills(prev => [...prev, { id: Date.now().toString(), name: billName.trim(), amount, frequency, createdMonth: new Date().getMonth(), recurring: false }]);
+    setBills(prev => [...prev, { id: Date.now().toString(), name: billName.trim(), amount, createdMonth: new Date().getMonth(), recurring: false }]);
     closeModal();
   };
 
@@ -76,7 +71,7 @@ export default function FinanceScreen() {
   const monthlyData = Array.from({ length: 12 }).map((_, i) => {
     const sum = bills.reduce((acc, bill) => {
       const include = bill.createdMonth === i || (bill.recurring && bill.createdMonth <= i);
-      return acc + (include ? (bill.frequency === 'monthly' ? bill.amount : bill.amount / 12) : 0);
+      return acc + (include ? bill.amount : 0);
     }, 0);
     const labels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     return { label: labels[i], value: parseFloat(sum.toFixed(2)) };
@@ -104,7 +99,7 @@ export default function FinanceScreen() {
           <View style={styles.billItem}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <Switch value={item.recurring} onValueChange={() => toggleRecurring(item.id)} thumbColor={item.recurring ? '#4D82F3' : undefined} />
-              <Text style={[styles.billText, { color: '#000', marginLeft: 8 }]}>{item.name} ({item.frequency})</Text>
+              <Text style={[styles.billText, { color: '#000', marginLeft: 8 }]}>{item.name}</Text>
               <Text style={[styles.billText, { color: '#000', marginLeft: 8 }]}>{`$${item.amount.toFixed(2)}`}</Text>
             </View>
             <Pressable onPress={() => removeBill(item.id)} style={{ padding: 4 }}>
@@ -133,20 +128,6 @@ export default function FinanceScreen() {
               value={billAmount}
               onChangeText={setBillAmount}
             />
-            <View style={styles.frequencyContainer}>
-              <Pressable
-                style={[styles.freqButton, frequency === 'monthly' && styles.freqButtonActive]}
-                onPress={() => setFrequency('monthly')}
-              >
-                <Text style={[styles.freqText, frequency === 'monthly' && styles.freqTextActive]}>Monthly</Text>
-              </Pressable>
-              <Pressable
-                style={[styles.freqButton, frequency === 'annual' && styles.freqButtonActive]}
-                onPress={() => setFrequency('annual')}
-              >
-                <Text style={[styles.freqText, frequency === 'annual' && styles.freqTextActive]}>Annual</Text>
-              </Pressable>
-            </View>
             <View style={styles.modalActions}>
               <Pressable style={styles.saveButton} onPress={addBill}>
                 <Text style={styles.saveText}>Save</Text>
@@ -174,11 +155,6 @@ const styles = StyleSheet.create({
   modalContainer: { width: '90%', backgroundColor: '#FFF', borderRadius: 8, padding: 16 },
   modalTitle: { fontSize: 18, fontWeight: '600', marginBottom: 12 },
   input: { borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 4, padding: 8, marginBottom: 12 },
-  frequencyContainer: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 12 },
-  freqButton: { paddingVertical: 8, paddingHorizontal: 16, borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 4 },
-  freqButtonActive: { backgroundColor: '#4D82F3', borderColor: '#4D82F3' },
-  freqText: { fontSize: 14, color: '#1F2937' },
-  freqTextActive: { color: '#FFF' },
   modalActions: { flexDirection: 'row', justifyContent: 'flex-end' },
   saveButton: { backgroundColor: '#4D82F3', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 4, marginRight: 8 },
   saveText: { color: '#FFF', fontWeight: '600' },

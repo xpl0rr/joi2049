@@ -51,7 +51,7 @@ export default function FinanceScreen() {
 
   return (
     <SafeAreaView edges={['top']} style={[styles.container, { paddingTop: insets.top, backgroundColor: colorScheme === 'dark' ? Colors.dark.background : Colors.light.background }]}>      
-      <View style={styles.header}>
+      <View style={[styles.header, { marginTop: insets.top + 8 }]}>
         <Text style={[styles.title, { color: colorScheme === 'dark' ? Colors.dark.text : Colors.light.text }]}>Bills</Text>
         <Pressable onPress={openModal} style={styles.addButton}>
           <IconSymbol name="plus" size={20} color="#FFF" />

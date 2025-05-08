@@ -1,5 +1,5 @@
 import create from 'zustand';
-import { persist } from 'zustand/middleware';
+import { devtools, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export type ActivityKey = 'workout' | 'todo' | 'guitar' | 'custom4';
@@ -16,19 +16,22 @@ export interface CalendarState {
 }
 
 export const useCalendarStore = create<CalendarState>(
-  persist<CalendarState>(
-    (set, get) => ({
-      db: {},
-      toggleRing: (date, key) => {
-        const { db } = get();
-        const day = db[date] ?? { rings: {} as Record<ActivityKey, boolean> };
-        const rings = { ...day.rings, [key]: !day.rings[key] };
-        set({ db: { ...db, [date]: { rings } } });
-      },
-    }),
-    {
-      name: 'calendar',
-      getStorage: () => AsyncStorage,
-    }
+  devtools(
+    persist<CalendarState>(
+      (set, get) => ({
+        db: {},
+        toggleRing: (date, key) => {
+          const { db } = get();
+          const day = db[date] ?? { rings: {} as Record<ActivityKey, boolean> };
+          const rings = { ...day.rings, [key]: !day.rings[key] };
+          set({ db: { ...db, [date]: { rings } } });
+        },
+      }),
+      {
+        name: 'calendar',
+        getStorage: () => AsyncStorage,
+      }
+    ),
+    { name: 'calendar-devtools' }
   )
 );

@@ -61,3 +61,6 @@ export const useCalendarStore = create<CalendarState>()(
     { name: 'calendarStore' },  // appears in Redux DevTools
   ),
 );
+
+// Default export to satisfy Expo Router
+export default useCalendarStore;

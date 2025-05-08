@@ -24,3 +24,6 @@ declare module 'zustand/middleware' {
     }
   ): StateCreator<T>;
 }
+
+// Default exports to satisfy Expo Router
+export default {};

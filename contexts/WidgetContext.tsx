@@ -159,6 +159,10 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
         if (storedPagesJson) {
           console.log('Found stored data in AsyncStorage');
           const storedPages = JSON.parse(storedPagesJson);
+          // Ensure dashboard title is up-to-date
+          if (storedPages.dashboard) {
+            storedPages.dashboard.name = defaultPages.dashboard.name;
+          }
           setPages(storedPages);
         } else {
           console.log('No stored data found, using defaults');

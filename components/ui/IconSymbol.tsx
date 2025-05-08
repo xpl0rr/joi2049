@@ -1,31 +1,35 @@
 // This file is a fallback for using MaterialIcons on Android and web.
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { SymbolWeight } from 'expo-symbols';
 import React from 'react';
-import { OpaqueColorValue, StyleProp, ViewStyle } from 'react-native';
+import { OpaqueColorValue, StyleProp, TextStyle } from 'react-native';
 
-// Add your SFSymbol to MaterialIcons mappings here.
-const MAPPING = {
-  // See MaterialIcons here: https://icons.expo.fyi
-  // See SF Symbols in the SF Symbols app on Mac.
+// Mapping from SF Symbol names to MaterialIcons names
+const MAPPING: Record<string, React.ComponentProps<typeof MaterialIcons>['name']> = {
   'house.fill': 'home',
   'paperplane.fill': 'send',
-  'chevron.left.forwardslash.chevron.right': 'code',
+  'chevron.left': 'chevron-left',
   'chevron.right': 'chevron-right',
-} as Partial<
-  Record<
-    import('expo-symbols').SymbolViewProps['name'],
-    React.ComponentProps<typeof MaterialIcons>['name']
-  >
->;
+  'heart.fill': 'favorite',
+  'dollarsign.circle.fill': 'attach-money',
+  'gearshape.fill': 'settings',
+  'checklist': 'check-box',
+  'ellipsis': 'more-horiz',
+  'xmark': 'close',
+  'calendar': 'calendar-today',
+  'list.bullet': 'format-list-bulleted',
+  'note.text': 'note',
+  'chart.bar.fill': 'bar-chart',
+  'chart.bar': 'bar-chart',
+  'square.grid.2x2.fill': 'grid-view',
+  'arrow.up': 'arrow-upward',
+  'arrow.down': 'arrow-downward'
+};
 
-export type IconSymbolName = keyof typeof MAPPING;
+export type IconSymbolName = keyof typeof MAPPING | string;
 
 /**
- * An icon component that uses native SFSymbols on iOS, and MaterialIcons on Android and web. This ensures a consistent look across platforms, and optimal resource usage.
- *
- * Icon `name`s are based on SFSymbols and require manual mapping to MaterialIcons.
+ * Cross-platform icon: maps SF Symbol names to MaterialIcons names.
  */
 export function IconSymbol({
   name,
@@ -36,8 +40,8 @@ export function IconSymbol({
   name: IconSymbolName;
   size?: number;
   color: string | OpaqueColorValue;
-  style?: StyleProp<ViewStyle>;
-  weight?: SymbolWeight;
+  style?: StyleProp<TextStyle>;
 }) {
-  return <MaterialIcons color={color} size={size} name={MAPPING[name]} style={style} />;
+  const iconName = (MAPPING[name] ?? name) as React.ComponentProps<typeof MaterialIcons>['name'];
+  return <MaterialIcons color={color} size={size} name={iconName} style={style as any} />;
 }

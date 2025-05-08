@@ -1,4 +1,4 @@
-import create from 'zustand';
+import { create, persist } from 'zustand';
 import { persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -10,13 +10,13 @@ export interface CalendarDB {
   };
 }
 
-interface CalendarState {
+export interface CalendarState {
   db: CalendarDB;
   toggleRing: (date: string, key: ActivityKey) => void;
 }
 
 export const useCalendarStore = create<CalendarState>(
-  persist(
+  persist<CalendarState>(
     (set, get) => ({
       db: {},
       toggleRing: (date, key) => {

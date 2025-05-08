@@ -1,28 +1,15 @@
 //  CalendarDashboard.tsx
 import { Calendar } from 'react-native-calendars';
 import { View, TouchableOpacity } from 'react-native';
-import { useMMKVObject } from 'react-native-mmkv';
+import { useCalendarStore, ActivityKey } from './calendarStore';
 import { Ionicons } from '@expo/vector-icons';
 import DayRings from './DayRings';          // ring component (see below)
 import AddSheet from './AddSheet';          // bottom-sheet component
 
-const storage = new MMKV();
-
 export default function CalendarDashboard() {
-  const [db, setDB] = useMMKVObject<CalendarDB>('calendar', storage);
+  const db = useCalendarStore(state => state.db);
+  const toggleRing = useCalendarStore(state => state.toggleRing);
   const [selected, setSelected] = useState<string>();
-
-  const toggleRing = (date: string, key: ActivityKey) => {
-    const day = db?.[date] ?? { rings: {} as any };
-    const next = {
-      ...db,
-      [date]: {
-        ...day,
-        rings: { ...day.rings, [key]: !day.rings[key] },
-      },
-    };
-    setDB(next);
-  };
 
   return (
     <View style={{ flex: 1 }}>

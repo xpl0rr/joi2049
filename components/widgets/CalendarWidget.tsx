@@ -656,7 +656,7 @@ const styles = StyleSheet.create({
     borderColor: '#000000',
     borderRadius: 6,
     backgroundColor: 'transparent',
-    zIndex: -1,
+    zIndex: 0,
   },
   dayText: {
     fontSize: 14,
@@ -682,7 +682,7 @@ const styles = StyleSheet.create({
     top: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: -1,
+    zIndex: 1,
   },
   addRingsButton: {
     backgroundColor: '#4D82F3',

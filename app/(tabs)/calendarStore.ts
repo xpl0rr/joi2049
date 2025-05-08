@@ -1,5 +1,8 @@
 // app.config.js
-export default {
+export default ({ config }) => ({
+  /* ── keep Expo defaults ── */
+  ...config,
+
   /* ── basic app info ── */
   name: 'Joi2049',
   slug: 'joi2049',
@@ -48,7 +51,7 @@ export default {
         backgroundColor: '#ffffff',
       },
     ],
-    'expo-dev-client',
+    'expo-dev-client',          // lets your custom dev client open QR links
   ],
 
   /* ── Experiments ── */
@@ -61,9 +64,10 @@ export default {
   /* ── Extra ── */
   extra: {
     router: { origin: false },
-    eas: { projectId: 'd52e7dc8-b81f-495f-a4c3-15fb85e04cb4' }, // ← new ID
+    // EAS will write a new projectId here after `eas build:configure`
+    // eas: { projectId: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' },
   },
 
   /* ── Expo owner ── */
   owner: 'xplorr',
-};
+});

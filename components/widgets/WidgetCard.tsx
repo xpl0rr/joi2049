@@ -9,11 +9,7 @@ import { IconSymbol } from '../ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Widget, useWidgets } from '@/contexts/WidgetContext';
-import NotesWidget from './NotesWidget';
-import SimpleTodoWidget from './SimpleTodoWidget';
-import ActivityWidget from './ActivityWidget';
 import CalendarWidget from './CalendarWidget';
-import ChartWidget from './ChartWidget';
 
 interface WidgetCardProps {
   widget: Widget;
@@ -87,72 +83,19 @@ const WidgetCard: React.FC<WidgetCardProps> = ({
   });
 
   // Widget type icon mapping
-  const getTypeIcon = () => {
-    switch(widget.type) {
-      case 'todo': return 'checklist';
-      case 'simpletodo': return 'list.bullet';
-      case 'notes': return 'note.text';
-      case 'activity': return 'chart.bar.fill';
-      case 'calendar': return 'calendar';
-      case 'chart': return 'chart.bar';
-      default: return 'square.grid.2x2.fill';
-    }
-  };
+  const getTypeIcon = () => 'calendar';
 
   // Render widget content based on type
   const renderWidgetContent = () => {
-    // If widget is in thumbnail mode, render a simple preview instead
-    if (widget.isThumbnail) {
-      return null; // No content for thumbnail mode, just the header
+    if (widget.isThumbnail) return null;
+    if (widget.type === 'calendar') {
+      return <CalendarWidget
+        events={widget.config.events || []}
+        onUpdate={(config) => handleUpdateConfig({...widget.config, ...config})}
+        onEdit={onEdit}
+      />;
     }
-    
-    // Check if this is a preview widget in the widget selection screen
-    // We can detect this by checking if the onEdit and onRemove props are undefined
-    const isPreviewWidget = onEdit === undefined && onRemove === undefined;
-    
-    // Render the full widget content
-    switch(widget.type) {
-      case 'todo':
-      case 'simpletodo':
-        console.log('Rendering SimpleTodoWidget with items:', widget.config.items?.length || 0);
-        return <SimpleTodoWidget 
-          items={widget.config.items || []} 
-          onUpdate={(items) => {
-            console.log('Todo items updated, saving:', items.length);
-            handleUpdateConfig({...widget.config, items});
-          }} 
-        />;
-      case 'notes':
-        return <NotesWidget 
-          notes={widget.config.notes || ''} 
-          onUpdate={(notes) => handleUpdateConfig({...widget.config, notes})}
-          readOnly={isPreviewWidget} // Set readOnly to true for preview widgets
-        />;
-      case 'activity':
-        return <ActivityWidget
-          title={widget.config.title || 'Daily Activity'}
-          percentage={widget.config.percentage || 0}
-          onUpdate={(config) => handleUpdateConfig({...widget.config, ...config})}
-        />;
-      case 'calendar':
-        return <CalendarWidget
-          events={widget.config.events || []}
-          onUpdate={(config) => handleUpdateConfig({...widget.config, ...config})}
-          onEdit={onEdit}
-        />;
-      case 'chart':
-        return <ChartWidget
-          title={widget.config.title || widget.title || 'Bar Chart'}
-          data={widget.config.data || []}
-          onUpdate={(config) => handleUpdateConfig({...widget.config, ...config})}
-        />;
-      default:
-        return (
-          <Text style={[styles.placeholder, { color: '#64748B' }]}> 
-            {widget.title} widget
-          </Text>
-        );
-    }
+    return null;
   };
 
   return (
@@ -288,7 +231,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#64748B',
   },
-  // Remove unused styles
   thumbnailContent: {
     justifyContent: 'center',
     alignItems: 'center',

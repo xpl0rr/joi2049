@@ -3,26 +3,29 @@ import React from 'react';
 
 export default function TabLayout() {
   return (
-    <Tabs screenOptions={{ headerShown: false, tabBarStyle: { display: 'none' } }}>
-      <Tabs.Screen 
-        name="index" 
-        options={{ href: "/" }}
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        // We hide Expo-Router’s own bar because you’re using <CustomTabBar />
+        tabBarStyle: { display: 'none' },
+      }}
+    >
+      {/* Home */}
+      <Tabs.Screen
+        name="index"
+        options={{ href: '/' }}
       />
-      <Tabs.Screen 
-        name="health" 
-        options={{ href: "/health" }}
+
+      {/* Health */}
+      <Tabs.Screen
+        name="health"
+        options={{ href: '/health' }}
       />
-      <Tabs.Screen 
-        name="finance" 
-        options={{ href: "/finance" }}
-      />
-      <Tabs.Screen 
-        name="todo" 
-        options={{ href: "/todo" }}
-      />
-      <Tabs.Screen 
-        name="custom/[id]" 
-        options={{ href: null }}
+
+      {/* Finances */}
+      <Tabs.Screen
+        name="finance"
+        options={{ href: '/finance' }}
       />
     </Tabs>
   );

@@ -38,38 +38,6 @@ const WidgetContext = createContext<WidgetContextType | undefined>(undefined);
 
 // Sample widgets
 const defaultWidgets: Widget[] = [
-  { 
-    id: 'notes', 
-    type: 'notes', 
-    title: 'Notes', 
-    config: { notes: 'Add your notes, ideas, and reminders here...' }, 
-    size: 'medium',
-    isThumbnail: false
-  },
-  { 
-    id: 'todo-list', 
-    type: 'simpletodo', 
-    title: 'Todo', 
-    config: { 
-      items: [
-        { id: '1', text: 'Buy groceries', completed: false, createdAt: new Date().toISOString() },
-        { id: '2', text: 'Finish project', completed: false, createdAt: new Date().toISOString() }
-      ] 
-    }, 
-    size: 'medium',
-    isThumbnail: false
-  },
-  { 
-    id: 'activity-tracker', 
-    type: 'activity', 
-    title: 'Daily Activity', 
-    config: { 
-      title: 'Track Progress',
-      percentage: 66
-    }, 
-    size: 'medium',
-    isThumbnail: false
-  },
   {
     id: 'calendar',
     type: 'calendar',
@@ -82,29 +50,6 @@ const defaultWidgets: Widget[] = [
     size: 'medium',
     isThumbnail: false
   },
-  {
-    id: 'chart',
-    type: 'chart',
-    title: 'Bar Chart',
-    config: {
-      data: [
-        { label: 'Jan', value: 150 },
-        { label: 'Feb', value: 360 },
-        { label: 'Mar', value: 180 },
-        { label: 'Apr', value: 280 },
-        { label: 'May', value: 170 },
-        { label: 'Jun', value: 180 },
-        { label: 'Jul', value: 270 },
-        { label: 'Aug', value: 90 },
-        { label: 'Sep', value: 190 },
-        { label: 'Oct', value: 370 },
-        { label: 'Nov', value: 260 },
-        { label: 'Dec', value: 100 },
-      ]
-    },
-    size: 'medium',
-    isThumbnail: false
-  },
 ];
 
 // Default pages with some widgets already added
@@ -112,10 +57,8 @@ const defaultPages: Record<string, Page> = {
   dashboard: {
     id: 'dashboard',
     name: 'Relentless',
-    customizable: false, // Can't delete the dashboard
-    widgets: [
-      { ...defaultWidgets[3], id: `${defaultWidgets[3].id}-1`, size: 'medium' },
-    ],
+    customizable: false,
+    widgets: [{ ...defaultWidgets[0], id: `${defaultWidgets[0].id}-1`, size: 'medium' }],
   },
   health: { 
     id: 'health', 

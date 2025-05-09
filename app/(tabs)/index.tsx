@@ -42,7 +42,11 @@ export default function DashboardScreen() {
             <Text style={styles.itemText}>{item}</Text>
             <Switch
               value={!!db[today]?.rings?.[item]}
-              onValueChange={() => toggleActivity(item)}
+              onValueChange={(val) => {
+                if (val) {
+                  toggleActivity(item);
+                }
+              }}
             />
             <Pressable onPress={() => removeActivity(item)} style={styles.deleteButton}>
               <IconSymbol name="trash" size={20} color="#EF4444" />

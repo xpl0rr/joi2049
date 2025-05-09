@@ -13,7 +13,10 @@ export default function DashboardScreen() {
   const [activities, setActivities] = useState<string[]>([]);
   const [newActivity, setNewActivity] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
-  const today = new Date().toISOString().slice(0, 10);
+
+  // Use local date components to generate ISO date key (YYYY-MM-DD)
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
   const openModal = () => setModalVisible(true);
   const addActivity = () => {

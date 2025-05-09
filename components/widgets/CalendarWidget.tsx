@@ -5,6 +5,7 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { IconSymbol } from '../ui/IconSymbol';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Svg, { Circle } from 'react-native-svg';
+import { useCalendarStore } from '@/app/(tabs)/calendarStore';
 
 // Days of week abbreviations
 const DAYS_OF_WEEK = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
@@ -69,6 +70,20 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [calendarRings, setCalendarRings] = useState<Record<string, RingData>>({});
   
+  const storeDb = useCalendarStore(state => state.db);
+
+  // Sync calendar rings with activity toggles in store
+  useEffect(() => {
+    const newRings: Record<string, RingData> = {};
+    Object.entries(storeDb).forEach(([dateKey, entry]) => {
+      const toggles = entry.rings;
+      if (Object.values(toggles).some(val => val)) {
+        newRings[dateKey] = { outer: true, middle: false, center: false, outerNote: '', middleNote: '', centerNote: '' };
+      }
+    });
+    setCalendarRings(newRings);
+  }, [storeDb]);
+
   // Modal state for rings and notes
   const [ringsModalVisible, setRingsModalVisible] = useState(false);
   const [selectedDateForRings, setSelectedDateForRings] = useState<Date | null>(null);
@@ -113,10 +128,8 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
     saveCalendarRings();
   }, [calendarRings]);
 
-  // Format date to string key for storage
-  const formatDateKey = (date: Date) => {
-    return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-  };
+  // Format date key as ISO string YYYY-MM-DD to match store keys
+  const formatDateKey = (date: Date) => date.toISOString().slice(0, 10);
 
   // Generate days for the current month
   const generateDaysForMonth = useCallback((month: number, year: number) => {
@@ -145,12 +158,14 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
                  eventDate.getMonth() === month && 
                  eventDate.getFullYear() === year;
         }),
-        hasRings: calendarRings[dateKey] || null
+        hasRings: storeDb[dateKey] && Object.values(storeDb[dateKey].rings).some(v => v)
+          ? { outer: true, middle: false, center: false, outerNote: '', middleNote: '', centerNote: '' }
+          : null
       });
     }
     
     return days;
-  }, [events, today, calendarRings]);
+  }, [events, today, storeDb]);
   
   // Move to previous month
   const goToPreviousMonth = useCallback(() => {

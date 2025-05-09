@@ -394,10 +394,6 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
             );
           })}
         </View>
-        
-        <TouchableOpacity style={styles.addRingsButton} onPress={handleEditPress}>
-          <Text style={styles.addRingsButtonText}>Add Rings</Text>
-        </TouchableOpacity>
       </View>
     );
   };
@@ -683,19 +679,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1,
-  },
-  addRingsButton: {
-    backgroundColor: '#4D82F3',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignSelf: 'center',
-    marginTop: 16,
-  },
-  addRingsButtonText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '600',
   },
   modalOuterContainer: {
     flex: 1,

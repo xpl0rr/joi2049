@@ -23,6 +23,7 @@ export default function DashboardScreen() {
     setModalVisible(false);
   };
   const toggleActivity = (key: string) => toggleRing(today, key);
+  const removeActivity = (key: string) => setActivities(prev => prev.filter(a => a !== key));
 
   return (
     <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: Colors.light.background }]}>      
@@ -32,10 +33,6 @@ export default function DashboardScreen() {
           <IconSymbol name="plus" size={20} color="#FFF" />
         </Pressable>
       </View>
-      <CalendarWidget
-        events={calendarConfig.events}
-        onUpdate={config => setCalendarConfig(config)}
-      />
       <FlatList
         data={activities}
         keyExtractor={item => item}
@@ -47,8 +44,15 @@ export default function DashboardScreen() {
               value={!!db[today]?.rings?.[item]}
               onValueChange={() => toggleActivity(item)}
             />
+            <Pressable onPress={() => removeActivity(item)} style={styles.deleteButton}>
+              <IconSymbol name="trash" size={20} color="#EF4444" />
+            </Pressable>
           </View>
         )}
+      />
+      <CalendarWidget
+        events={calendarConfig.events}
+        onUpdate={config => setCalendarConfig(config)}
       />
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
@@ -92,4 +96,5 @@ const styles = StyleSheet.create({
   saveText: { color: '#FFF', fontWeight: '600' },
   cancelButton: { paddingVertical: 8, paddingHorizontal: 16 },
   cancelText: { color: '#4D82F3', fontWeight: '600' },
+  deleteButton: { padding: 4 },
 });

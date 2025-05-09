@@ -17,9 +17,14 @@ export interface CalendarDB {
 export interface CalendarState {
   /** Entire calendar keyed by ISO date (YYYY-MM-DD) */
   db: CalendarDB;
-
+  /** List of tracked activities */
+  activities: ActivityKey[];
   /** Toggle an activity ring on a given day */
   toggleRing: (isoDate: string, key: ActivityKey) => void;
+  /** Add a new activity to track */
+  addActivity: (key: ActivityKey) => void;
+  /** Remove an activity */
+  removeActivity: (key: ActivityKey) => void;
 }
 
 /** ---------- STORE ---------- */
@@ -28,7 +33,7 @@ export const useCalendarStore = create<CalendarState>()(
     persist(
       (set, get) => ({
         db: {},
-
+        activities: [],
         toggleRing: (isoDate, key) =>
           set(state => {
             const day = state.db[isoDate] ?? { rings: {} };
@@ -45,6 +50,8 @@ export const useCalendarStore = create<CalendarState>()(
               },
             };
           }),
+        addActivity: (key) => set(state => ({ activities: [...state.activities, key] })),
+        removeActivity: (key) => set(state => ({ activities: state.activities.filter(a => a !== key) })),
       }),
       {
         name: 'calendar-db',     // key in AsyncStorage

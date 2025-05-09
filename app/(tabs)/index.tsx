@@ -10,7 +10,9 @@ export default function DashboardScreen() {
   const [calendarConfig, setCalendarConfig] = useState({ events: [], view: 'month', selectedDate: new Date().toISOString() });
   const db = useCalendarStore(state => state.db);
   const toggleRing = useCalendarStore(state => state.toggleRing);
-  const [activities, setActivities] = useState<string[]>([]);
+  const activities = useCalendarStore(state => state.activities);
+  const addActivityStore = useCalendarStore(state => state.addActivity);
+  const removeActivityStore = useCalendarStore(state => state.removeActivity);
   const [newActivity, setNewActivity] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -21,12 +23,12 @@ export default function DashboardScreen() {
   const openModal = () => setModalVisible(true);
   const addActivity = () => {
     if (!newActivity.trim()) return;
-    setActivities(prev => [...prev, newActivity.trim()]);
+    addActivityStore(newActivity.trim());
     setNewActivity('');
     setModalVisible(false);
   };
   const toggleActivity = (key: string) => toggleRing(today, key);
-  const removeActivity = (key: string) => setActivities(prev => prev.filter(a => a !== key));
+  const removeActivity = (key: string) => removeActivityStore(key);
 
   return (
     <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: Colors.light.background }]}>      
@@ -51,7 +53,7 @@ export default function DashboardScreen() {
                 }
               }}
             />
-            <Pressable onPress={() => removeActivity(item)} style={styles.deleteButton}>
+            <Pressable onPress={() => removeActivityStore(item)} style={styles.deleteButton}>
               <IconSymbol name="trash" size={20} color="#EF4444" />
             </Pressable>
           </View>

@@ -23,7 +23,7 @@ export function CustomTabBar() {
           <Pressable
             key={name}
             style={styles.tab}
-            onPress={() => router.push(href)}
+            onPress={() => router.replace(href)}
           >
             <FontAwesome
               name={icon as any}

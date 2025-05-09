@@ -3,7 +3,6 @@ import { StyleSheet, View, Text, FlatList, Modal, TextInput, Pressable, Switch }
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/Colors';
 import { useCalendarStore } from './calendarStore';
-import { IconSymbol } from '@/components/ui/IconSymbol';
 
 export default function HealthScreen() {
   const db = useCalendarStore(state => state.db);
@@ -25,10 +24,8 @@ export default function HealthScreen() {
   return (
     <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: Colors.light.background }]}>      
       <View style={styles.header}>
-        <Text style={[styles.title, { color: '#000' }]}>Activities</Text>
-        <Pressable style={styles.addButton} onPress={openModal}>
-          <IconSymbol name="plus" size={20} color="#FFF" />
-        </Pressable>
+        <Text style={[styles.title, { color: '#000' }]}>Health</Text>
+        {/* add button removed */}
       </View>
       <FlatList
         data={activities}
@@ -73,7 +70,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
   header: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginTop: 16, marginBottom: 12 },
   title: { position: 'absolute', left: 16, right: 16, textAlign: 'center', fontSize: 18, fontWeight: '600' },
-  addButton: { width: 32, height: 32, backgroundColor: '#4D82F3', borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   item: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
   itemText: { fontSize: 16, color: '#000' },
   emptyText: { textAlign: 'center', color: '#6B7280', marginTop: 20 },

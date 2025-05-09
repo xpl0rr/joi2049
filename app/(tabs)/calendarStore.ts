@@ -4,7 +4,7 @@ import { devtools, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 /** Every type of activity you plan to track */
-export type ActivityKey = 'workout' | 'todo' | 'guitar' | 'custom4';
+export type ActivityKey = string;
 
 /** One day’s data: a ring for each activity */
 export interface CalendarDB {
@@ -31,14 +31,7 @@ export const useCalendarStore = create<CalendarState>()(
 
         toggleRing: (isoDate, key) =>
           set(state => {
-            const day = state.db[isoDate] ?? {
-              rings: {
-                workout: false,
-                todo: false,
-                guitar: false,
-                custom4: false,
-              },
-            };
+            const day = state.db[isoDate] ?? { rings: {} };
 
             return {
               db: {

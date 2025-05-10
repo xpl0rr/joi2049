@@ -46,7 +46,7 @@ interface DayInfo {
 // Structure for ring data
 interface RingData {
   outer: boolean; // Red ring
-  middle: boolean; // White ring
+  middle: boolean; // Blue ring
   center: boolean; // Black dot
   outerNote: string;
   middleNote: string;
@@ -158,14 +158,12 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
                  eventDate.getMonth() === month && 
                  eventDate.getFullYear() === year;
         }),
-        hasRings: storeDb[dateKey] && Object.values(storeDb[dateKey].rings).some(v => v)
-          ? { outer: true, middle: false, center: false, outerNote: '', middleNote: '', centerNote: '' }
-          : null
+        hasRings: calendarRings[dateKey] ?? null
       });
     }
     
     return days;
-  }, [events, today, storeDb]);
+  }, [events, today, calendarRings]);
   
   // Move to previous month
   const goToPreviousMonth = useCallback(() => {
@@ -330,13 +328,13 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
           />
         )}
         
-        {/* Middle ring (white) */}
+        {/* Middle ring (blue) */}
         {ringData.middle && (
           <Circle
             cx="12"
             cy="12"
             r="5"
-            stroke="#FFFFFF"
+            stroke="#4D82F3"
             strokeWidth="2"
             fill="transparent"
           />
@@ -523,27 +521,27 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
                   )}
                 </View>
                 
-                {/* White Ring */}
+                {/* Blue Ring */}
                 <View style={styles.ringOptionContainer}>
                   <View style={styles.ringOption}>
                     <View style={styles.ringLabelContainer}>
                       <View style={styles.ringColorSample}>
                         <View style={[styles.colorSample, styles.middleRingSample]} />
                       </View>
-                      <Text style={styles.ringLabel}>White Ring</Text>
+                      <Text style={styles.ringLabel}>Blue Ring</Text>
                     </View>
                     <Switch
                       value={currentRingData.middle}
                       onValueChange={(value) => toggleRing('middle', value)}
-                      trackColor={{ false: '#E5E7EB', true: '#E5E5EA' }}
-                      thumbColor={currentRingData.middle ? '#FFFFFF' : '#f4f3f4'}
+                      trackColor={{ false: '#E5E7EB', true: '#4D82F3' }}
+                      thumbColor={currentRingData.middle ? '#4D82F3' : '#f4f3f4'}
                     />
                   </View>
                   
                   {currentRingData.middle && (
                     <TextInput
                       style={styles.noteInput}
-                      placeholder="Note for white ring..."
+                      placeholder="Enter activity for blue ring..."
                       value={currentRingData.middleNote}
                       onChangeText={(text) => updateNote('middleNote', text)}
                     />
@@ -583,14 +581,14 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
                   style={[styles.modalButton, styles.cancelButton]} 
                   onPress={() => setRingsModalVisible(false)}
                 >
-                  <Text style={styles.buttonText}>Cancel</Text>
+                  <IconSymbol name="xmark" size={24} color="#1F2937" />
                 </TouchableOpacity>
                 
                 <TouchableOpacity 
                   style={[styles.modalButton, styles.saveButton]} 
                   onPress={saveRings}
                 >
-                  <Text style={[styles.buttonText, styles.saveButtonText]}>Save</Text>
+                  <IconSymbol name="checkmark" size={24} color="#fff" />
                 </TouchableOpacity>
               </View>
             </View>
@@ -778,7 +776,7 @@ const styles = StyleSheet.create({
   },
   middleRingSample: {
     borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderColor: '#4D82F3',
     backgroundColor: '#F3F4F6',
   },
   centerDotSample: {

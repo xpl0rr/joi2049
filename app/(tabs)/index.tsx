@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Text, FlatList, Modal, TextInput, Pressable, Switch } from 'react-native';
+import { StyleSheet, View, Text, FlatList, Modal, TextInput, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/Colors';
 import CalendarWidget from '@/components/widgets/CalendarWidget';
@@ -9,7 +9,6 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 export default function DashboardScreen() {
   const [calendarConfig, setCalendarConfig] = useState({ events: [], view: 'month', selectedDate: new Date().toISOString() });
   const db = useCalendarStore(state => state.db);
-  const toggleRing = useCalendarStore(state => state.toggleRing);
   const activities = useCalendarStore(state => state.activities);
   const addActivityStore = useCalendarStore(state => state.addActivity);
   const removeActivityStore = useCalendarStore(state => state.removeActivity);
@@ -27,7 +26,6 @@ export default function DashboardScreen() {
     setNewActivity('');
     setModalVisible(false);
   };
-  const toggleActivity = (key: string) => toggleRing(today, key);
   const removeActivity = (key: string) => removeActivityStore(key);
 
   return (
@@ -45,14 +43,6 @@ export default function DashboardScreen() {
         renderItem={({ item }) => (
           <View style={styles.item}>
             <Text style={styles.itemText}>{item}</Text>
-            <Switch
-              value={!!db[today]?.rings?.[item]}
-              onValueChange={(val) => {
-                if (val) {
-                  toggleActivity(item);
-                }
-              }}
-            />
             <Pressable onPress={() => removeActivityStore(item)} style={styles.deleteButton}>
               <IconSymbol name="trash" size={20} color="#EF4444" />
             </Pressable>

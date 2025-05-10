@@ -562,18 +562,12 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
               </ScrollView>
               
               <View style={styles.modalButtons}>
-                <TouchableOpacity 
-                  style={[styles.modalButton, styles.cancelButton]} 
-                  onPress={() => setRingsModalVisible(false)}
-                >
+                <TouchableOpacity onPress={() => setRingsModalVisible(false)}>
                   <IconSymbol name="xmark" size={24} color="#1F2937" />
                 </TouchableOpacity>
                 
-                <TouchableOpacity 
-                  style={[styles.modalButton, styles.saveButton]} 
-                  onPress={saveRings}
-                >
-                  <IconSymbol name="checkmark" size={24} color="#fff" />
+                <TouchableOpacity onPress={saveRings}>
+                  <IconSymbol name="checkmark" size={24} color="#1F2937" />
                 </TouchableOpacity>
               </View>
             </View>
@@ -784,28 +778,6 @@ const styles = StyleSheet.create({
   modalButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-  },
-  modalButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    flex: 1,
-    alignItems: 'center',
-    marginHorizontal: 4,
-  },
-  cancelButton: {
-    backgroundColor: '#F3F4F6',
-  },
-  saveButton: {
-    backgroundColor: '#4D82F3',
-  },
-  buttonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1F2937',
-  },
-  saveButtonText: {
-    color: 'white',
   },
   yearContainer: {
     flex: 1,

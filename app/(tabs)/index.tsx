@@ -3,7 +3,7 @@ import { StyleSheet, View, Text, FlatList, Modal, TextInput, Pressable } from 'r
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/Colors';
 import CalendarWidget from '@/components/widgets/CalendarWidget';
-import { useCalendarStore } from './calendarStore';
+import { useCalendarStore } from '@/components/helpers/calendarStore';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 
 export default function DashboardScreen() {

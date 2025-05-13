@@ -108,10 +108,12 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
         console.error('Failed to save calendar rings:', error);
       }
     };
-    
-    // Save regardless of whether calendarRings is empty
-    saveCalendarRings();
-  }, [calendarRings]);
+
+    // Save rings after initial load
+    if (!isLoading) {
+      saveCalendarRings();
+    }
+  }, [calendarRings, isLoading]);
 
   // Format date key as ISO string YYYY-MM-DD to match store keys
   const formatDateKey = (date: Date) => date.toISOString().slice(0, 10);

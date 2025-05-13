@@ -1,7 +1,7 @@
 //  CalendarDashboard.tsx
 import { Calendar } from 'react-native-calendars';
 import { View, TouchableOpacity } from 'react-native';
-import { useCalendarStore, ActivityKey, CalendarState } from './calendarStore';
+import { useCalendarStore, ActivityKey, CalendarState } from '@/components/helpers/calendarStore';
 import { Ionicons } from '@expo/vector-icons';
 import DayRings from './DayRings';          // ring component (see below)
 import AddSheet from './AddSheet';          // bottom-sheet component

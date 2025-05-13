@@ -10,12 +10,18 @@
       "distribution": "internal",
       "channel": "dev"
     },
+
     "preview": {
       "distribution": "internal",
       "channel": "dev"
     },
+
     "production": {
-      "autoIncrement": true,
+      "channel": "production"
+    },
+
+    "dev-release": {
+      "distribution": "internal",
       "channel": "production"
     }
   },

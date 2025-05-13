@@ -13,8 +13,14 @@ export interface BillEntry {
 /* ──────────── props ──────────── */
 interface ChartWidgetProps {
   title?: string;
-  /** raw list of bills */
+  /** raw list of primary dataset (bills) */
   data: BillEntry[];
+  /** raw list of secondary dataset (discretionary) */
+  secondaryData?: BillEntry[];
+  /** color for primary dataset (bills) */
+  primaryColor?: string;
+  /** color for secondary dataset (discretionary) */
+  secondaryColor?: string;
   onUpdate: (cfg: any) => void;
 }
 
@@ -45,6 +51,9 @@ const roundMax = (n: number) => {
 const ChartWidget: React.FC<ChartWidgetProps> = ({
   title = 'Bills Over Time',
   data = [],
+  secondaryData = [],
+  primaryColor = '#000',
+  secondaryColor = '#EF4444',
   onUpdate,
 }) => {
   /* 1. Aggregate totals by month, skip bad data */
@@ -57,6 +66,15 @@ const ChartWidget: React.FC<ChartWidgetProps> = ({
     return t;
   }, [data]);
 
+  const monthlyTotalsSecondary = useMemo(() => {
+    const t2 = Array(12).fill(0);
+    secondaryData.forEach(({ date, amount }) => {
+      const idx = safeMonth(date);
+      if (idx !== null && amount > 0) t2[idx] += amount;
+    });
+    return t2;
+  }, [secondaryData]);
+
   /* Total across all months */
   const total = monthlyTotals.reduce((sum, v) => sum + v, 0);
 
@@ -64,13 +82,13 @@ const ChartWidget: React.FC<ChartWidgetProps> = ({
   const [chartW, setChartW] = useState(
     Dimensions.get('window').width - PAD_H * 2 - 20,
   );
-  const maxVal = Math.max(...monthlyTotals);
+  const maxVal = Math.max(...monthlyTotals, ...monthlyTotalsSecondary);
   const yMax = roundMax(maxVal);
   const yTicks = Array.from({ length: 6 }, (_, i) => yMax - (yMax / 5) * i);
 
   /* 3. Build line segments (skip gaps) */
   type Pt = { x: number; y: number };
-  const segments: Pt[][] = [];
+  const segmentsPrimary: Pt[][] = [];
   let cur: Pt[] = [];
 
   monthlyTotals.forEach((val, i) => {
@@ -80,11 +98,26 @@ const ChartWidget: React.FC<ChartWidgetProps> = ({
     if (val > 0) {
       cur.push({ x, y });
     } else if (cur.length) {
-      segments.push(cur);
+      segmentsPrimary.push(cur);
       cur = [];
     }
   });
-  if (cur.length) segments.push(cur);
+  if (cur.length) segmentsPrimary.push(cur);
+
+  const segmentsSecondary: Pt[][] = [];
+  let cur2: Pt[] = [];
+
+  monthlyTotalsSecondary.forEach((val, i) => {
+    const x = (i * chartW) / (MONTHS.length - 1);
+    const y = yMax > 0 ? CHART_H - (val / yMax) * CHART_H : CHART_H;
+    if (val > 0) {
+      cur2.push({ x, y });
+    } else if (cur2.length) {
+      segmentsSecondary.push(cur2);
+      cur2 = [];
+    }
+  });
+  if (cur2.length) segmentsSecondary.push(cur2);
 
   /* 4. Render */
   return (
@@ -108,17 +141,29 @@ const ChartWidget: React.FC<ChartWidgetProps> = ({
       {/* Chart */}
       <View style={styles.chartArea}>
         <Svg width={chartW} height={CHART_H}>
-          {segments.map((seg, i) => (
+          {segmentsPrimary.map((seg, i) => (
             <Polyline
               key={i}
               points={seg.map(p => `${p.x},${p.y}`).join(' ')}
-              stroke="#4D82F3"
+              stroke={primaryColor}
               strokeWidth={2}
               fill="none"
             />
           ))}
-          {segments.flat().map((p, i) => (
-            <Circle key={i} cx={p.x} cy={p.y} r={3} fill="#4D82F3" />
+          {segmentsPrimary.flat().map((p, i) => (
+            <Circle key={i} cx={p.x} cy={p.y} r={3} fill={primaryColor} />
+          ))}
+          {segmentsSecondary.map((seg, i) => (
+            <Polyline
+              key={`sec-${i}`}
+              points={seg.map(p => `${p.x},${p.y}`).join(' ')}
+              stroke={secondaryColor}
+              strokeWidth={2}
+              fill="none"
+            />
+          ))}
+          {segmentsSecondary.flat().map((p, i) => (
+            <Circle key={`sec-point-${i}`} cx={p.x} cy={p.y} r={3} fill={secondaryColor} />
           ))}
         </Svg>
       </View>

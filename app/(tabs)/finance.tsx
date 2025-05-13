@@ -139,6 +139,15 @@ export default function FinanceScreen() {
     amount: item.value,
   }));
 
+  // Compute secondary (discretionary) series for chart
+  const chartEntriesSecondary: BillEntry[] = Array.from({ length: 12 }).map((_, i) => {
+    const sum = discretionary.reduce((acc, item) => {
+      const include = item.createdMonth === i || (item.recurring && item.createdMonth <= i);
+      return acc + (include ? item.amount : 0);
+    }, 0);
+    return { date: new Date(new Date().getFullYear(), i, 1), amount: sum };
+  });
+
   return (
     <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: Colors.light.background }]}>      
       <View style={{ flex: 1 }}>
@@ -174,7 +183,7 @@ export default function FinanceScreen() {
         {/* Discretionary Section */}
         <View style={styles.header}>
           <Pressable onPress={() => setShowDiscretionary(prev => !prev)} style={{ flex: 1 }}>
-            <Text style={[styles.title, { color: '#000' }]}>Discretionary</Text>
+            <Text style={[styles.title, { color: '#EF4444' }]}>Discretionary</Text>
           </Pressable>
           <Pressable onPress={openModalDiscretionary} style={styles.addButton}>
             <IconSymbol name="plus" size={20} color="#FFF" />
@@ -199,7 +208,14 @@ export default function FinanceScreen() {
           />
         )}
       </View>
-      <ChartWidget title="Bills Over Time" data={chartEntries} onUpdate={() => {}} />
+      <ChartWidget
+        title="Bills Over Time"
+        data={chartEntries}
+        secondaryData={chartEntriesSecondary}
+        primaryColor="#000"
+        secondaryColor="#EF4444"
+        onUpdate={() => {}}
+      />
       {/* Discretionary Modal */}
       <Modal visible={modalVisibleDiscretionary} transparent animationType="slide">
         <View style={styles.modalOverlay}>

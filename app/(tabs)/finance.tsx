@@ -8,6 +8,7 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 
 const STORAGE_KEY = '@bills';
+const DISCRETIONARY_KEY = '@discretionary';
 
 interface Bill {
   id: string;
@@ -20,9 +21,16 @@ interface Bill {
 export default function FinanceScreen() {
   const colorScheme = useColorScheme();
   const [bills, setBills] = useState<Bill[]>([]);
+  const [showBills, setShowBills] = useState(true);
+  const [discretionary, setDiscretionary] = useState<Bill[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
+  const [modalVisibleDiscretionary, setModalVisibleDiscretionary] = useState(false);
   const [billName, setBillName] = useState('');
+  const [discrName, setDiscrName] = useState('');
   const [billAmount, setBillAmount] = useState('');
+  const [discrAmount, setDiscrAmount] = useState('');
+  const [isLoadingBills, setIsLoadingBills] = useState(true);
+  const [isLoadingDiscr, setIsLoadingDiscr] = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -31,19 +39,48 @@ export default function FinanceScreen() {
         if (json) setBills(JSON.parse(json));
       } catch (e) {
         console.error('Failed to load bills', e);
+      } finally {
+        setIsLoadingBills(false);
       }
     })();
   }, []);
 
   useEffect(() => {
+    if (!isLoadingBills) {
+      (async () => {
+        try {
+          await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(bills));
+        } catch (e) {
+          console.error('Failed to save bills', e);
+        }
+      })();
+    }
+  }, [bills, isLoadingBills]);
+
+  useEffect(() => {
     (async () => {
       try {
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(bills));
+        const json = await AsyncStorage.getItem(DISCRETIONARY_KEY);
+        if (json) setDiscretionary(JSON.parse(json));
       } catch (e) {
-        console.error('Failed to save bills', e);
+        console.error('Failed to load discretionary', e);
+      } finally {
+        setIsLoadingDiscr(false);
       }
     })();
-  }, [bills]);
+  }, []);
+
+  useEffect(() => {
+    if (!isLoadingDiscr) {
+      (async () => {
+        try {
+          await AsyncStorage.setItem(DISCRETIONARY_KEY, JSON.stringify(discretionary));
+        } catch (e) {
+          console.error('Failed to save discretionary', e);
+        }
+      })();
+    }
+  }, [discretionary, isLoadingDiscr]);
 
   const openModal = () => setModalVisible(true);
   const closeModal = () => {
@@ -68,6 +105,25 @@ export default function FinanceScreen() {
     setBills(prev => prev.map(bill => bill.id === id ? { ...bill, recurring: !bill.recurring } : bill));
   };
 
+  const openModalDiscretionary = () => setModalVisibleDiscretionary(true);
+  const closeModalDiscretionary = () => {
+    setModalVisibleDiscretionary(false);
+    setDiscrName('');
+    setDiscrAmount('');
+  };
+
+  const addDiscretionary = () => {
+    if (!discrName.trim() || !discrAmount) return;
+    const amount = parseFloat(discrAmount);
+    if (isNaN(amount)) return;
+    setDiscretionary(prev => [...prev, { id: Date.now().toString(), name: discrName.trim(), amount, createdMonth: new Date().getMonth(), recurring: false }]);
+    closeModalDiscretionary();
+  };
+
+  const removeDiscretionary = (id: string) => {
+    setDiscretionary(prev => prev.filter(item => item.id !== id));
+  };
+
   const monthlyData = Array.from({ length: 12 }).map((_, i) => {
     const sum = bills.reduce((acc, bill) => {
       const include = bill.createdMonth === i || (bill.recurring && bill.createdMonth <= i);
@@ -77,7 +133,6 @@ export default function FinanceScreen() {
     return { label: labels[i], value: parseFloat(sum.toFixed(2)) };
   });
 
-  // Transform monthly aggregates into BillEntry format
   const chartEntries: BillEntry[] = monthlyData.map((item, i) => ({
     date: new Date(new Date().getFullYear(), i, 1),
     amount: item.value,
@@ -86,31 +141,87 @@ export default function FinanceScreen() {
   return (
     <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: Colors.light.background }]}>      
       <View style={styles.header}>
-        <Text style={[styles.title, { color: '#000' }]}>Bills</Text>
+        <Pressable onPress={() => setShowBills(prev => !prev)}>
+          <Text style={[styles.title, { color: '#000' }]}>Bills</Text>
+        </Pressable>
         <Pressable onPress={openModal} style={styles.addButton}>
+          <IconSymbol name="plus" size={20} color="#FFF" />
+        </Pressable>
+      </View>
+      {showBills && (
+        <FlatList
+          style={{ flex: 1 }}
+          data={bills}
+          keyExtractor={item => item.id}
+          renderItem={({ item }) => (
+            <View style={styles.billItem}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Switch value={item.recurring} onValueChange={() => toggleRecurring(item.id)} thumbColor={item.recurring ? '#4D82F3' : undefined} />
+                <Text style={[styles.billText, { color: '#000', marginLeft: 8 }]}>{item.name}</Text>
+                <Text style={[styles.billText, { color: '#000', marginLeft: 8 }]}>{`$${item.amount.toFixed(2)}`}</Text>
+              </View>
+              <Pressable onPress={() => removeBill(item.id)} style={{ padding: 4 }}>
+                <IconSymbol name="trash" size={20} color="#EF4444" />
+              </Pressable>
+            </View>
+          )}
+          ListEmptyComponent={<Text style={styles.emptyText}>No bills added.</Text>}
+          contentContainerStyle={bills.length === 0 ? { flex: 1, justifyContent: 'center' } : undefined}
+        />
+      )}
+      <ChartWidget title="Bills Over Time" data={chartEntries} onUpdate={() => {}} />
+      {/* Discretionary Section */}
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: '#000' }]}>Discretionary</Text>
+        <Pressable onPress={openModalDiscretionary} style={styles.addButton}>
           <IconSymbol name="plus" size={20} color="#FFF" />
         </Pressable>
       </View>
       <FlatList
         style={{ flex: 1 }}
-        data={bills}
+        data={discretionary}
         keyExtractor={item => item.id}
         renderItem={({ item }) => (
           <View style={styles.billItem}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Switch value={item.recurring} onValueChange={() => toggleRecurring(item.id)} thumbColor={item.recurring ? '#4D82F3' : undefined} />
-              <Text style={[styles.billText, { color: '#000', marginLeft: 8 }]}>{item.name}</Text>
-              <Text style={[styles.billText, { color: '#000', marginLeft: 8 }]}>{`$${item.amount.toFixed(2)}`}</Text>
-            </View>
-            <Pressable onPress={() => removeBill(item.id)} style={{ padding: 4 }}>
+            <Text style={[styles.billText, { color: '#000' }]}>{item.name}</Text>
+            <Text style={[styles.billText, { color: '#000' }]}>{`$${item.amount.toFixed(2)}`}</Text>
+            <Pressable onPress={() => removeDiscretionary(item.id)} style={{ padding: 4 }}>
               <IconSymbol name="trash" size={20} color="#EF4444" />
             </Pressable>
           </View>
         )}
-        ListEmptyComponent={<Text style={styles.emptyText}>No bills added.</Text>}
-        contentContainerStyle={bills.length === 0 ? { flex: 1, justifyContent: 'center' } : undefined}
+        ListEmptyComponent={<Text style={styles.emptyText}>No discretionary items.</Text>}
+        contentContainerStyle={discretionary.length === 0 ? { flex: 1, justifyContent: 'center' } : undefined}
       />
-      <ChartWidget title="Bills Over Time" data={chartEntries} onUpdate={() => {}} />
+      {/* Discretionary Modal */}
+      <Modal visible={modalVisibleDiscretionary} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Add Discretionary</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Name"
+              value={discrName}
+              onChangeText={setDiscrName}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Amount"
+              keyboardType="decimal-pad"
+              value={discrAmount}
+              onChangeText={setDiscrAmount}
+            />
+            <View style={styles.modalActions}>
+              <Pressable style={styles.saveButton} onPress={addDiscretionary}>
+                <Text style={styles.saveText}>Save</Text>
+              </Pressable>
+              <Pressable style={styles.cancelButton} onPress={closeModalDiscretionary}>
+                <Text style={styles.cancelText}>Cancel</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>

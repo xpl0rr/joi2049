@@ -1,6 +1,6 @@
 // app/(tabs)/calendarStore.ts
 import { create } from 'zustand';
-import { devtools, persist } from 'zustand/middleware';
+import { devtools, persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 /** Every type of activity you plan to track */
@@ -55,7 +55,7 @@ export const useCalendarStore = create<CalendarState>()(
       }),
       {
         name: 'calendar-db',     // key in AsyncStorage
-        getStorage: () => AsyncStorage,
+        getStorage: () => createJSONStorage(() => AsyncStorage),
       },
     ),
     { name: 'calendarStore' },  // appears in Redux DevTools

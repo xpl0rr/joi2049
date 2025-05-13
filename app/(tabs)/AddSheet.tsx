@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Switch } from 'react-native';
 import BottomSheet from '@gorhom/bottom-sheet';
-import { ActivityKey } from './calendarStore';
+import { ActivityKey } from '@/components/helpers/calendarStore';
 import { ringPalette } from '@/constants/ringPalette';
 
 export default function AddSheet(

@@ -8,7 +8,6 @@ module.exports = {
   icon: './assets/images/icon.png',
   scheme: 'joi2049',
   userInterfaceStyle: 'automatic',
-  newArchEnabled: false,
 
   /* ── OTA / updates ── */
   updates: {

@@ -21,11 +21,14 @@ export default function CalendarDashboard() {
             { customStyles: { container: {}, text: {} } }, // keep default style
           ])
         )}
-        dayComponent={({ date }) => (
-          <TouchableOpacity onPress={() => setSelected(date.dateString)}>
-            <DayRings rings={db?.[date.dateString]?.rings} date={date} />
-          </TouchableOpacity>
-        )}
+        dayComponent={({ date }) => {
+          if (!date) return null;
+          return (
+            <TouchableOpacity onPress={() => setSelected(date.dateString)}>
+              <DayRings rings={db?.[date.dateString]?.rings} date={{ day: date.day }} />
+            </TouchableOpacity>
+          );
+        }}
       />
 
       {/* ➕ FAB */}

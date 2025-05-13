@@ -7,6 +7,7 @@ const TAB_ITEMS = [
   { name: 'Home',    href: '/',        icon: 'home'   },
   { name: 'Health',  href: '/health',  icon: 'heart'  },
   { name: 'Finance', href: '/finance', icon: 'dollar' },
+  { name: 'Notes',   href: '/notes',   icon: 'sticky-note' },
 ];
 
 export function CustomTabBar() {

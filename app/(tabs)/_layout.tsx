@@ -27,6 +27,12 @@ export default function TabLayout() {
         name="finance"
         options={{ href: '/finance' }}
       />
+
+      {/* Notes */}
+      <Tabs.Screen
+        name="notes"
+        options={{ href: '/notes' }}
+      />
     </Tabs>
   );
 }

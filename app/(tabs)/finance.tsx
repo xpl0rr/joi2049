@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { StyleSheet, View, Text, Modal, Pressable, TextInput, FlatList, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -22,6 +22,7 @@ export default function FinanceScreen() {
   const colorScheme = useColorScheme();
   const [bills, setBills] = useState<Bill[]>([]);
   const [showBills, setShowBills] = useState(true);
+  const [showDiscretionary, setShowDiscretionary] = useState(true);
   const [discretionary, setDiscretionary] = useState<Bill[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalVisibleDiscretionary, setModalVisibleDiscretionary] = useState(false);
@@ -140,59 +141,65 @@ export default function FinanceScreen() {
 
   return (
     <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: Colors.light.background }]}>      
-      <View style={styles.header}>
-        <Pressable onPress={() => setShowBills(prev => !prev)}>
-          <Text style={[styles.title, { color: '#000' }]}>Bills</Text>
-        </Pressable>
-        <Pressable onPress={openModal} style={styles.addButton}>
-          <IconSymbol name="plus" size={20} color="#FFF" />
-        </Pressable>
-      </View>
-      {showBills && (
-        <FlatList
-          style={{ flex: 1 }}
-          data={bills}
-          keyExtractor={item => item.id}
-          renderItem={({ item }) => (
-            <View style={styles.billItem}>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Switch value={item.recurring} onValueChange={() => toggleRecurring(item.id)} thumbColor={item.recurring ? '#4D82F3' : undefined} />
-                <Text style={[styles.billText, { color: '#000', marginLeft: 8 }]}>{item.name}</Text>
-                <Text style={[styles.billText, { color: '#000', marginLeft: 8 }]}>{`$${item.amount.toFixed(2)}`}</Text>
+      <View style={{ flex: 1 }}>
+        <View style={styles.header}>
+          <Pressable onPress={() => setShowBills(prev => !prev)} style={{ flex: 1 }}>
+            <Text style={[styles.title, { color: '#000' }]}>Bills</Text>
+          </Pressable>
+          <Pressable onPress={openModal} style={styles.addButton}>
+            <IconSymbol name="plus" size={20} color="#FFF" />
+          </Pressable>
+        </View>
+        {showBills && (
+          <FlatList
+            style={{ flex: 1 }}
+            data={bills}
+            keyExtractor={item => item.id}
+            renderItem={({ item }) => (
+              <View style={styles.billItem}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Switch value={item.recurring} onValueChange={() => toggleRecurring(item.id)} thumbColor={item.recurring ? '#4D82F3' : undefined} />
+                  <Text style={[styles.billText, { color: '#000', marginLeft: 8 }]}>{item.name}</Text>
+                  <Text style={[styles.billText, { color: '#000', marginLeft: 8 }]}>{`$${item.amount.toFixed(2)}`}</Text>
+                </View>
+                <Pressable onPress={() => removeBill(item.id)} style={{ padding: 4 }}>
+                  <IconSymbol name="trash" size={20} color="#EF4444" />
+                </Pressable>
               </View>
-              <Pressable onPress={() => removeBill(item.id)} style={{ padding: 4 }}>
-                <IconSymbol name="trash" size={20} color="#EF4444" />
-              </Pressable>
-            </View>
-          )}
-          ListEmptyComponent={<Text style={styles.emptyText}>No bills added.</Text>}
-          contentContainerStyle={bills.length === 0 ? { flex: 1, justifyContent: 'center' } : undefined}
-        />
-      )}
-      <ChartWidget title="Bills Over Time" data={chartEntries} onUpdate={() => {}} />
-      {/* Discretionary Section */}
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: '#000' }]}>Discretionary</Text>
-        <Pressable onPress={openModalDiscretionary} style={styles.addButton}>
-          <IconSymbol name="plus" size={20} color="#FFF" />
-        </Pressable>
-      </View>
-      <FlatList
-        style={{ flex: 1 }}
-        data={discretionary}
-        keyExtractor={item => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.billItem}>
-            <Text style={[styles.billText, { color: '#000' }]}>{item.name}</Text>
-            <Text style={[styles.billText, { color: '#000' }]}>{`$${item.amount.toFixed(2)}`}</Text>
-            <Pressable onPress={() => removeDiscretionary(item.id)} style={{ padding: 4 }}>
-              <IconSymbol name="trash" size={20} color="#EF4444" />
-            </Pressable>
-          </View>
+            )}
+            ListEmptyComponent={<Text style={styles.emptyText}>No bills added.</Text>}
+            contentContainerStyle={bills.length === 0 ? { flex: 1, justifyContent: 'center' } : undefined}
+          />
         )}
-        ListEmptyComponent={<Text style={styles.emptyText}>No discretionary items.</Text>}
-        contentContainerStyle={discretionary.length === 0 ? { flex: 1, justifyContent: 'center' } : undefined}
-      />
+        {/* Discretionary Section */}
+        <View style={styles.header}>
+          <Pressable onPress={() => setShowDiscretionary(prev => !prev)} style={{ flex: 1 }}>
+            <Text style={[styles.title, { color: '#000' }]}>Discretionary</Text>
+          </Pressable>
+          <Pressable onPress={openModalDiscretionary} style={styles.addButton}>
+            <IconSymbol name="plus" size={20} color="#FFF" />
+          </Pressable>
+        </View>
+        {showDiscretionary && (
+          <FlatList
+            style={{ flex: 1 }}
+            data={discretionary}
+            keyExtractor={item => item.id}
+            renderItem={({ item }) => (
+              <View style={styles.billItem}>
+                <Text style={[styles.billText, { color: '#000' }]}>{item.name}</Text>
+                <Text style={[styles.billText, { color: '#000' }]}>{`$${item.amount.toFixed(2)}`}</Text>
+                <Pressable onPress={() => removeDiscretionary(item.id)} style={{ padding: 4 }}>
+                  <IconSymbol name="trash" size={20} color="#EF4444" />
+                </Pressable>
+              </View>
+            )}
+            ListEmptyComponent={<Text style={styles.emptyText}>No discretionary items.</Text>}
+            contentContainerStyle={discretionary.length === 0 ? { flex: 1, justifyContent: 'center' } : undefined}
+          />
+        )}
+      </View>
+      <ChartWidget title="Bills Over Time" data={chartEntries} onUpdate={() => {}} />
       {/* Discretionary Modal */}
       <Modal visible={modalVisibleDiscretionary} transparent animationType="slide">
         <View style={styles.modalOverlay}>

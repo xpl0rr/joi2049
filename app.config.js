@@ -11,7 +11,10 @@ module.exports = {
   newArchEnabled: false,
 
   /* ── OTA / updates ── */
-  updates: { enabled: false },
+  updates: {
+    url: 'https://u.expo.dev/d52e7dc8-b81f-495f-a4c3-15fb85e04cb4',
+    fallbackToCacheTimeout: 0,
+  },
 
   /* ── iOS ── */
   ios: {
@@ -62,7 +65,7 @@ module.exports = {
   extra: {
     router: { origin: false },
     eas: {
-      projectId: 'd52e7dc8-b81f-495f-a4c3-15fb85e04cb4', // ← this matches the ID EAS just created
+      projectId: 'd52e7dc8-b81f-495f-a4c3-15fb85e04cb4',
     },
   },
 

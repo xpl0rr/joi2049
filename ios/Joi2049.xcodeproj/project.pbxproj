@@ -11,11 +11,11 @@
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		50FDE3EC47FB43F7964879DA /* noop-file.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59DFD50F3C7F4C9680318402 /* noop-file.swift */; };
+		5B6EF05FA9F145B798068557 /* noop-file.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A726E5FF5DE4B5E9205633E /* noop-file.swift */; };
 		96905EF65AED1B983A6B3ABC /* libPods-Joi2049.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 58EEBF8E8E6FB1BC6CAF49B5 /* libPods-Joi2049.a */; };
 		B18059E884C0ABDD17F3DC3D /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC715A2D49A985799AEE119 /* ExpoModulesProvider.swift */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		FAFA2886914BB0F43216A0E7 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A20E897C8B00C7472BBE0D93 /* PrivacyInfo.xcprivacy */; };
+		C1AFFB2A2827F510CEF40A86 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A3D1A297910BA0B99FE0FDA5 /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -25,12 +25,12 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Joi2049/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Joi2049/Info.plist; sourceTree = "<group>"; };
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = Joi2049/main.m; sourceTree = "<group>"; };
-		2ED09D37F37044C99D8F8F7B /* Joi2049-Bridging-Header.h */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.c.h; name = "Joi2049-Bridging-Header.h"; path = "Joi2049/Joi2049-Bridging-Header.h"; sourceTree = "<group>"; };
+		4A726E5FF5DE4B5E9205633E /* noop-file.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = "noop-file.swift"; path = "Joi2049/noop-file.swift"; sourceTree = "<group>"; };
 		58EEBF8E8E6FB1BC6CAF49B5 /* libPods-Joi2049.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Joi2049.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		59DFD50F3C7F4C9680318402 /* noop-file.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = "noop-file.swift"; path = "Joi2049/noop-file.swift"; sourceTree = "<group>"; };
 		6C2E3173556A471DD304B334 /* Pods-Joi2049.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Joi2049.debug.xcconfig"; path = "Target Support Files/Pods-Joi2049/Pods-Joi2049.debug.xcconfig"; sourceTree = "<group>"; };
 		7A4D352CD337FB3A3BF06240 /* Pods-Joi2049.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Joi2049.release.xcconfig"; path = "Target Support Files/Pods-Joi2049/Pods-Joi2049.release.xcconfig"; sourceTree = "<group>"; };
-		A20E897C8B00C7472BBE0D93 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = Joi2049/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		93C2108A6BA04A53B48154A9 /* Joi2049-Bridging-Header.h */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.c.h; name = "Joi2049-Bridging-Header.h"; path = "Joi2049/Joi2049-Bridging-Header.h"; sourceTree = "<group>"; };
+		A3D1A297910BA0B99FE0FDA5 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = Joi2049/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = Joi2049/SplashScreen.storyboard; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
@@ -59,9 +59,9 @@
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				13B07FB71A68108700A75B9A /* main.m */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				59DFD50F3C7F4C9680318402 /* noop-file.swift */,
-				2ED09D37F37044C99D8F8F7B /* Joi2049-Bridging-Header.h */,
-				A20E897C8B00C7472BBE0D93 /* PrivacyInfo.xcprivacy */,
+				4A726E5FF5DE4B5E9205633E /* noop-file.swift */,
+				93C2108A6BA04A53B48154A9 /* Joi2049-Bridging-Header.h */,
+				A3D1A297910BA0B99FE0FDA5 /* PrivacyInfo.xcprivacy */,
 			);
 			name = Joi2049;
 			sourceTree = "<group>";
@@ -147,13 +147,13 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "Joi2049" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				8132DC07C41AA1D9263BB5F5 /* [Expo] Configure project */,
+				F18FD8FD6E8FFF57D1EB9254 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				3AB8E992FB5E233FA53FC7DA /* [CP] Embed Pods Frameworks */,
+				5E921E3F5ED42554876A84D2 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -203,7 +203,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				FAFA2886914BB0F43216A0E7 /* PrivacyInfo.xcprivacy in Resources */,
+				C1AFFB2A2827F510CEF40A86 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -247,7 +247,7 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		3AB8E992FB5E233FA53FC7DA /* [CP] Embed Pods Frameworks */ = {
+		5E921E3F5ED42554876A84D2 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -309,7 +309,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Joi2049/Pods-Joi2049-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		8132DC07C41AA1D9263BB5F5 /* [Expo] Configure project */ = {
+		F18FD8FD6E8FFF57D1EB9254 /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -338,7 +338,7 @@
 				13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */,
 				13B07FC11A68108700A75B9A /* main.m in Sources */,
 				B18059E884C0ABDD17F3DC3D /* ExpoModulesProvider.swift in Sources */,
-				50FDE3EC47FB43F7964879DA /* noop-file.swift in Sources */,
+				5B6EF05FA9F145B798068557 /* noop-file.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -369,7 +369,7 @@
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = com.xplorr.Joi;
-				PRODUCT_NAME = "Joi2049";
+				PRODUCT_NAME = Joi2049;
 				SWIFT_OBJC_BRIDGING_HEADER = "Joi2049/Joi2049-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -397,7 +397,7 @@
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PRODUCT_BUNDLE_IDENTIFIER = com.xplorr.Joi;
-				PRODUCT_NAME = "Joi2049";
+				PRODUCT_NAME = Joi2049;
 				SWIFT_OBJC_BRIDGING_HEADER = "Joi2049/Joi2049-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";

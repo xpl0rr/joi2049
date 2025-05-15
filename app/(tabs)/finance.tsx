@@ -6,6 +6,11 @@ import ChartWidget, { BillEntry } from '@/components/widgets/ChartWidget';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import * as FileSystem from 'expo-file-system';
+import * as DocumentPicker from 'expo-document-picker';
+import { shareAsync } from 'expo-sharing';
+import { Alert } from 'react-native';
+import * as Updates from 'expo-updates';
 
 const STORAGE_KEY = '@bills';
 const DISCRETIONARY_KEY = '@discretionary';
@@ -148,8 +153,106 @@ export default function FinanceScreen() {
     return { date: new Date(new Date().getFullYear(), i, 1), amount: sum };
   });
 
+  // Exports and imports for backup
+  const exportData = async () => {
+    try {
+      const keys = await AsyncStorage.getAllKeys();
+      const result = await AsyncStorage.multiGet(keys);
+      const obj = Object.fromEntries(result);
+      const json = JSON.stringify(obj);
+      const fileUri = FileSystem.documentDirectory + 'joi_backup.json';
+      await FileSystem.writeAsStringAsync(fileUri, json, { encoding: FileSystem.EncodingType.UTF8 });
+      await shareAsync(fileUri, { UTI: 'public.json', mimeType: 'application/json' });
+    } catch (e) {
+      console.error(e);
+      Alert.alert('Export Failed', 'Could not export data.');
+    }
+  };
+
+const importData = async () => {
+  try {
+    console.log('Starting import process...');
+    const result = await DocumentPicker.getDocumentAsync({ type: 'application/json' });
+    console.log('Document picker result:', JSON.stringify(result));
+    
+    // Handle new DocumentPicker API format (SDK 52+)
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const fileUri = result.assets[0].uri;
+      console.log('File picked, reading content from:', fileUri);
+      
+      const content = await FileSystem.readAsStringAsync(fileUri, { encoding: FileSystem.EncodingType.UTF8 });
+      console.log('File content read, length:', content.length);
+      
+      // Parse the JSON file
+      const obj = JSON.parse(content);
+      console.log('Importing keys:', Object.keys(obj));
+      
+      // Map legacy keys to current keys
+      if (obj["joiapp_calendar_rings"] && !obj["calendar-db"]) {
+        obj["calendar-db"] = obj["joiapp_calendar_rings"];
+        console.log('Mapped joiapp_calendar_rings to calendar-db');
+      }
+      
+      // Create a new object with unpacked values for selected keys
+      const modifiedObj = {...obj};
+      
+      // Log and manually set key data for debugging
+      if (obj['@bills']) {
+        console.log('Found @bills in import, length:', obj['@bills'].length);
+        try {
+          // Set the bills array directly for immediate use
+          const billsData = JSON.parse(obj['@bills']);
+          console.log('Parsed bills data:', billsData.length, 'items');
+          setBills(billsData);
+        } catch (e) {
+          console.error('Error parsing @bills:', e);
+        }
+      }
+      
+      if (obj['@notes']) {
+        console.log('Found @notes in import, length:', obj['@notes'].length);
+        try {
+          const notesData = JSON.parse(obj['@notes']);
+          console.log('Parsed notes data:', notesData.length, 'items');
+          // Note: We cannot set notes here since it's in a different component
+          // It will be loaded after app reload
+        } catch (e) {
+          console.error('Error parsing @notes:', e);
+        }
+      }
+      
+      if (obj['@discretionary']) {
+        console.log('Found @discretionary in import');
+        try {
+          const discretionaryData = JSON.parse(obj['@discretionary']);
+          console.log('Parsed discretionary data:', discretionaryData.length, 'items');
+          setDiscretionary(discretionaryData);
+        } catch (e) {
+          console.error('Error parsing @discretionary:', e);
+        }
+      }
+      
+      // Convert to entries for AsyncStorage
+      const entries = Object.entries(modifiedObj) as [string, string][];
+      console.log('Setting', entries.length, 'entries in AsyncStorage');
+      await AsyncStorage.multiSet(entries);
+      
+      Alert.alert('Import Successful', 'Data has been imported. The app will now reload.');
+      console.log('Reloading app with Updates.reloadAsync()...');
+      await Updates.reloadAsync();
+    } else {
+      console.log('Document picker canceled');
+      Alert.alert('Import Canceled', 'No file was selected.');
+    }
+  } catch (e) {
+    console.error('Import failed with error:', e);
+    Alert.alert('Import Failed', 'Could not import data: ' + (e instanceof Error ? e.message : String(e)));
+  }
+};
+
   return (
-    <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: Colors.light.background }]}>      
+    <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: Colors.light.background }]}>
+
       <View style={{ flex: 1 }}>
         <View style={styles.header}>
           <Pressable onPress={() => setShowBills(prev => !prev)} style={{ flex: 1 }}>
@@ -212,10 +315,18 @@ export default function FinanceScreen() {
         title="Bills Over Time"
         data={chartEntries}
         secondaryData={chartEntriesSecondary}
-        primaryColor="#000"
-        secondaryColor="#EF4444"
+        primaryColor={colorScheme === 'dark' ? Colors.dark.tabIconSelected : Colors.light.tabIconSelected}
+        secondaryColor={colorScheme === 'dark' ? Colors.dark.error : Colors.light.error}
         onUpdate={() => {}}
       />
+      <View style={styles.buttonContainer}>
+        <Pressable style={[styles.button, { backgroundColor: colorScheme === 'dark' ? Colors.dark.tint : Colors.light.tint }]} onPress={exportData}>
+          <Text style={styles.buttonText}>Export Data</Text>
+        </Pressable>
+        <Pressable style={[styles.button, { backgroundColor: colorScheme === 'dark' ? Colors.dark.tint : Colors.light.tint }]} onPress={importData}>
+          <Text style={styles.buttonText}>Import Data</Text>
+        </Pressable>
+      </View>
       {/* Discretionary Modal */}
       <Modal visible={modalVisibleDiscretionary} transparent animationType="slide">
         <View style={styles.modalOverlay}>
@@ -294,4 +405,18 @@ const styles = StyleSheet.create({
   saveText: { color: '#FFF', fontWeight: '600' },
   cancelButton: { paddingVertical: 8, paddingHorizontal: 16 },
   cancelText: { color: '#4D82F3', fontWeight: '600' },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 16,
+  },
+  button: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
 });

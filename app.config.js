@@ -13,7 +13,14 @@ module.exports = {
   updates: {
     url: 'https://u.expo.dev/d52e7dc8-b81f-495f-a4c3-15fb85e04cb4',
     fallbackToCacheTimeout: 0,
+    enabled: true,
+    checkAutomatically: 'ON_LOAD',
+    requiresEmbeddedAssets: true,
   },
+
+  /* ── JavaScript Engine ── */
+  jsEngine: 'jsc',
+  
 
   /* ── iOS ── */
   ios: {
@@ -49,12 +56,11 @@ module.exports = {
         resizeMode: 'contain',
         backgroundColor: '#ffffff',
       },
-    ],
-    'expo-dev-client',
+    ]
   ],
 
   /* ── Experiments ── */
-  experiments: { typedRoutes: true },
+  experiments: { typedRoutes: false },
 
   /* ── Runtime & assets ── */
   runtimeVersion: '1.0.0',
@@ -67,6 +73,8 @@ module.exports = {
       projectId: 'd52e7dc8-b81f-495f-a4c3-15fb85e04cb4',
     },
   },
+
+
 
   /* ── Expo owner ── */
   owner: 'xplorr',

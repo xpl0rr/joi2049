@@ -2,6 +2,7 @@
 import { create } from 'zustand';
 import { devtools, persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
 /** Every type of activity you plan to track */
 export type ActivityKey = string;
@@ -55,7 +56,51 @@ export const useCalendarStore = create<CalendarState>()(
       }),
       {
         name: 'calendar-db',     // key in AsyncStorage
-        getStorage: () => createJSONStorage(() => AsyncStorage),
+        getStorage: () => {
+          // Create a safer wrapper around AsyncStorage to prevent C++ exceptions
+          const safeStorage = {
+            getItem: async (name: string) => {
+              try {
+                return await AsyncStorage.getItem(name);
+              } catch (e) {
+                console.warn('Storage getItem error:', e);
+                return null;
+              }
+            },
+            setItem: async (name: string, value: string) => {
+              try {
+                return await AsyncStorage.setItem(name, value);
+              } catch (e) {
+                console.warn('Storage setItem error:', e);
+              }
+            },
+            removeItem: async (name: string) => {
+              try {
+                return await AsyncStorage.removeItem(name);
+              } catch (e) {
+                console.warn('Storage removeItem error:', e);
+              }
+            }
+          };
+          return createJSONStorage(() => safeStorage);
+        },
+        // Override serialization to handle potential errors
+        serialize: (state) => {
+          try {
+            return JSON.stringify(state);
+          } catch (e) {
+            console.warn('Storage serialization error:', e);
+            return JSON.stringify({ db: {}, activities: [] });
+          }
+        },
+        deserialize: (str) => {
+          try {
+            return JSON.parse(str);
+          } catch (e) {
+            console.warn('Storage deserialization error:', e);
+            return { db: {}, activities: [] };
+          }
+        }
       },
     ),
     { name: 'calendarStore' },  // appears in Redux DevTools

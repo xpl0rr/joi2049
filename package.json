@@ -5,6 +5,7 @@
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
+    "start-clean": "npx kill-port 8081 8082 && expo start -c",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
     "ios": "expo run:ios",
@@ -37,6 +38,7 @@
     "expo-updates": "^0.28.13",
     "expo-web-browser": "~14.1.6",
     "fs-extra": "^11.3.0",
+    "web-streams-polyfill": "^4.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-native": "^0.79.2",
@@ -48,7 +50,6 @@
     "react-native-svg": "15.11.2",
     "react-native-web": "~0.20.0",
     "react-native-webview": "13.13.5",
-    "web-streams-polyfill": "^4.1.0",
     "zustand": "^5.0.4"
   },
   "devDependencies": {
@@ -60,6 +61,14 @@
     "jest": "^29.2.1",
     "jest-expo": "~53.0.5",
     "react-test-renderer": "19.0.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "kill-port": "^2.0.1"
+  },
+  "expo": {
+    "doctor": {
+      "reactNativeDirectoryCheck": {
+        "listUnknownPackages": false
+      }
+    }
   }
 }

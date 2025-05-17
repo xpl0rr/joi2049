@@ -10,6 +10,7 @@ config.resolver.extraNodeModules = {
   ...config.resolver.extraNodeModules,
   'web-streams-polyfill': path.resolve(__dirname, 'src/polyfills.js'),
   '@expo/metro-runtime': path.resolve(__dirname, 'src/expo-metro-runtime-polyfill.js'),
+  'withErrorOverlay': path.resolve(__dirname, 'src/withErrorOverlay-patch.js'),
 };
 
 // Add resolver for problematic imports
@@ -26,6 +27,14 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
   if (moduleName === '@expo/metro-runtime' || moduleName.includes('@expo/metro-runtime')) {
     return {
       filePath: path.resolve(__dirname, 'src/expo-metro-runtime-polyfill.js'),
+      type: 'sourceFile',
+    };
+  }
+  
+  // Handle withErrorOverlay resolution issues
+  if (moduleName.includes('withErrorOverlay')) {
+    return {
+      filePath: path.resolve(__dirname, 'src/withErrorOverlay-patch.js'),
       type: 'sourceFile',
     };
   }

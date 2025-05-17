@@ -2,10 +2,10 @@
   "name": "joi",
   "version": "1.0.0",
   "private": true,
-  "main": "expo-router/entry",
+  "main": "./entry.js",
   "scripts": {
-    "start": "expo start",
-    "start-clean": "npx kill-port 8081 8082 && expo start -c",
+    "start": "node ./scripts/expo-patch.js && expo start",
+    "start-clean": "npx kill-port 8081 8082 && node ./scripts/expo-patch.js && expo start -c",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
     "ios": "expo run:ios",
@@ -17,7 +17,7 @@
     "preset": "jest-expo"
   },
   "dependencies": {
-    "@expo/metro-runtime": "5.0.4",
+    "@expo/metro-runtime": "^5.0.4",
     "@expo/vector-icons": "^14.0.2",
     "@gorhom/bottom-sheet": "^5.1.2",
     "@react-native-async-storage/async-storage": "2.1.2",
@@ -30,7 +30,7 @@
     "expo-font": "~13.3.1",
     "expo-haptics": "~14.1.4",
     "expo-linking": "~7.1.5",
-    "expo-router": "4.0.21",
+    "expo-router": "~5.0.7",
     "expo-sharing": "~13.1.5",
     "expo-splash-screen": "~0.30.8",
     "expo-status-bar": "~2.2.3",

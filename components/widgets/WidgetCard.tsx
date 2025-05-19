@@ -284,18 +284,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#64748B',
   },
-  // Remove unused styles
-  thumbnailContent: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '100%',
-  },
-  thumbnailText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#334155',
-    textAlign: 'center',
-  },
   thumbnailHeader: {
     marginBottom: 0,
     paddingVertical: 0,

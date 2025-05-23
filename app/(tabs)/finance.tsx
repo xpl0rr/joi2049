@@ -210,25 +210,40 @@ const importData = async () => {
       
       // Ensure calendar activities are preserved
       try {
-        // If the calendar-db exists, make sure it has the activities array
+        // Always check for separate activities, and prioritize them over any in calendar-db
+        let activitiesArray: string[] = [];
+        
+        // First, check if we have separately exported activities
+        if (obj['calendar-activities']) {
+          console.log('Found separate calendar-activities');
+          activitiesArray = JSON.parse(obj['calendar-activities']);
+          console.log('Parsed activities:', activitiesArray);
+        }
+        
+        // Now handle the calendar-db
         if (obj['calendar-db']) {
           const calendarData = JSON.parse(obj['calendar-db']);
           console.log('Calendar data:', calendarData);
           
-          // If there's no activities array or it's empty in the import but was in the previous state
-          if (!calendarData.state || !calendarData.state.activities || calendarData.state.activities.length === 0) {
-            console.log('No activities found in import, checking for separate activities');
+          // If we didn't find separate activities but calendar-db has them, use those
+          if (activitiesArray.length === 0 && calendarData.state && calendarData.state.activities) {
+            activitiesArray = calendarData.state.activities;
+            console.log('Using activities from calendar-db:', activitiesArray);
+          }
+          
+          // Always update the calendar-db with our activities array to ensure consistency
+          if (calendarData.state) {
+            // Create a fresh state object with our activities
+            calendarData.state = {
+              ...calendarData.state,
+              activities: activitiesArray
+            };
+            obj['calendar-db'] = JSON.stringify(calendarData);
+            console.log('Updated calendar-db with activities:', activitiesArray);
             
-            // Check if activities were separately exported
-            if (obj['calendar-activities']) {
-              console.log('Found separate calendar-activities');
-              const activitiesData = JSON.parse(obj['calendar-activities']);
-              if (calendarData.state) {
-                calendarData.state.activities = activitiesData;
-                console.log('Merged activities into calendar data:', activitiesData);
-                obj['calendar-db'] = JSON.stringify(calendarData);
-              }
-            }
+            // Also store activities separately for direct access by other components
+            obj['@activities'] = JSON.stringify(activitiesArray);
+            console.log('Stored activities in @activities for direct access');
           }
         }
       } catch (e) {

@@ -1,8 +1,8 @@
-# Welcome to your Expo app 👋
+# Joi - Your Personal Life Dashboard 👋
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+This is a React Native app built with [Expo](https://expo.dev) that helps you track important aspects of your life including finances, activities, and more.
 
-## Get started
+## Getting Started
 
 1. Install dependencies
 
@@ -10,10 +10,10 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npm install
    ```
 
-2. Start the app
+2. Start the development server
 
    ```bash
-    npx expo start
+   npx expo start
    ```
 
 In the output, you'll find options to open the app in a
@@ -35,16 +35,60 @@ npm run reset-project
 
 This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
-## Learn more
+## Testing and Linting
 
-To learn more about developing your project with Expo, look at the following resources:
+### Running Tests
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+This project uses Jest for testing. Run the tests with:
 
-## Join the community
+```bash
+npm test
+```
 
-Join our community of developers creating universal apps.
+Write tests in files with `.test.ts` or `.test.tsx` extensions in the same directory as the code being tested.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### Linting
+
+Lint your code to ensure it follows our style guidelines:
+
+```bash
+npm run lint
+```
+
+Fix automatically fixable issues:
+
+```bash
+npm run lint:fix
+```
+
+## Building for iOS
+
+This project uses EAS Build to create iOS builds. Always use the development profile for iOS builds unless explicitly requested otherwise.
+
+### Create a Development Build
+
+```bash
+eas build --platform ios --profile development
+```
+
+### Install on Your Device
+
+After the build completes, EAS will provide a URL to download and install the app on your device.
+
+## Project Structure
+
+- `app/` - Main application screens using Expo Router
+  - `(tabs)/` - Tab-based navigation screens
+- `components/` - Reusable UI components
+  - `widgets/` - Dashboard widgets
+  - `ui/` - Basic UI elements
+  - `helpers/` - Helper components and hooks
+- `contexts/` - React Context providers
+- `constants/` - App-wide constants and theme settings
+- `helpers/` - Utility functions
+
+## Learn More
+
+- [Expo documentation](https://docs.expo.dev/)
+- [React Native documentation](https://reactnative.dev/)
+- [Expo Router documentation](https://docs.expo.dev/router/introduction/)

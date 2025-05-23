@@ -1,12 +1,46 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { PersistenceHelper } from '@/helpers/persistenceHelper';
+
+// Define widget configuration interfaces for each widget type
+export interface CalendarWidgetConfig {
+  events: Array<any>;
+  view: 'month' | 'week' | 'day';
+  selectedDate: string;
+}
+
+export interface ChartWidgetConfig {
+  data: Array<{date: Date; amount: number}>;
+  secondaryData?: Array<{date: Date; amount: number}>;
+  primaryColor: string;
+  secondaryColor?: string;
+}
+
+export interface SimpleTodoWidgetConfig {
+  items: Array<{id: string; text: string; completed: boolean}>;
+}
+
+export interface NotesWidgetConfig {
+  content: string;
+}
+
+export interface ActivityWidgetConfig {
+  activities: string[];
+}
+
+// Union type for all possible widget configs
+export type WidgetConfig = 
+  | CalendarWidgetConfig 
+  | ChartWidgetConfig 
+  | SimpleTodoWidgetConfig 
+  | NotesWidgetConfig 
+  | ActivityWidgetConfig;
 
 // Define the widget data structure
 export interface Widget {
   id: string;
   type: 'todo' | 'simpletodo' | 'notes' | 'activity' | 'calendar' | 'chart';
   title: string;
-  config: any;
+  config: WidgetConfig;
   size: 'small' | 'medium' | 'large';
   isThumbnail: boolean;
 }
@@ -24,7 +58,7 @@ interface WidgetContextType {
   pages: Record<string, Page>;
   addWidget: (pageId: string, widget: Widget) => void;
   removeWidget: (pageId: string, widgetId: string) => void;
-  updateWidgetConfig: (pageId: string, widgetId: string, config: any) => void;
+  updateWidgetConfig: <T extends WidgetConfig>(pageId: string, widgetId: string, config: Partial<T>) => void;
   moveWidgetUp: (pageId: string, widgetId: string) => void;
   moveWidgetDown: (pageId: string, widgetId: string) => void;
   addPage: (page: Page) => void;
@@ -94,23 +128,20 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
     const loadData = async () => {
       try {
         console.log('Loading data from AsyncStorage...');
-        const storedPagesJson = await AsyncStorage.getItem(STORAGE_KEYS.PAGES);
-        if (storedPagesJson) {
-          console.log('Found stored data in AsyncStorage');
-          const storedPages = JSON.parse(storedPagesJson);
-          // Ensure dashboard title and widgets are up-to-date
-          if (storedPages.dashboard) {
-            storedPages.dashboard.name = defaultPages.dashboard.name;
-            storedPages.dashboard.widgets = defaultPages.dashboard.widgets;
-          }
-          // Clear todo widgets
-          if (storedPages.todo) {
-            storedPages.todo.widgets = [];
-          }
-          setPages(storedPages);
-        } else {
-          console.log('No stored data found, using defaults');
+        const storedPages = await PersistenceHelper.loadData<Record<string, Page>>(STORAGE_KEYS.PAGES, defaultPages);
+        
+        // Ensure dashboard title and widgets are up-to-date
+        if (storedPages.dashboard) {
+          storedPages.dashboard.name = defaultPages.dashboard.name;
+          storedPages.dashboard.widgets = defaultPages.dashboard.widgets;
         }
+        
+        // Clear todo widgets
+        if (storedPages.todo) {
+          storedPages.todo.widgets = [];
+        }
+        
+        setPages(storedPages);
         setIsLoaded(true);
       } catch (error) {
         console.error('Error loading data from AsyncStorage:', error);
@@ -129,14 +160,7 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
     
     // We're already saving widget config changes separately in updateWidgetConfig
     // This will handle other changes like adding/removing pages or widgets
-    (async () => {
-      try {
-        await AsyncStorage.setItem(STORAGE_KEYS.PAGES, JSON.stringify(pages));
-        console.log('Saved page structure changes to AsyncStorage');
-      } catch (error) {
-        console.error('Error saving page structure:', error);
-      }
-    })();
+    PersistenceHelper.saveData(STORAGE_KEYS.PAGES, pages);
   }, [pages, isLoaded]);
 
   // Add a widget to a page
@@ -170,7 +194,7 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
   };
 
   // Update a widget's config
-  const updateWidgetConfig = (pageId: string, widgetId: string, config: any) => {
+  const updateWidgetConfig = <T extends WidgetConfig>(pageId: string, widgetId: string, config: Partial<T>) => {
     setPages(prevPages => {
       if (!prevPages[pageId]) return prevPages;
 
@@ -182,8 +206,12 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
       }
 
       // Special handling for todo widget items
-      if (widgetToUpdate.type === 'simpletodo' && config.items) {
-        console.log(`Saving todo items for widget ${widgetId}:`, config.items.length);
+      if (widgetToUpdate.type === 'simpletodo' && 'items' in config) {
+        // Type assertion is safe here since we've checked that 'items' is in config
+        const todoConfig = config as Partial<SimpleTodoWidgetConfig>;
+        if (todoConfig.items) {
+          console.log(`Saving todo items for widget ${widgetId}:`, todoConfig.items.length);
+        }
       }
       
       // Create a new pages object with the updated widget config
@@ -200,14 +228,8 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
       };
       
       // Immediately save the updated data to AsyncStorage
-      (async () => {
-        try {
-          await AsyncStorage.setItem(STORAGE_KEYS.PAGES, JSON.stringify(updatedPages));
-          console.log(`Saved widget ${widgetId} update to AsyncStorage successfully`);
-        } catch (error) {
-          console.error('Failed to save widget update:', error);
-        }
-      })();
+      PersistenceHelper.saveData(STORAGE_KEYS.PAGES, updatedPages);
+      console.log(`Saving widget ${widgetId} update to AsyncStorage`);
       
       return updatedPages;
     });
@@ -235,11 +257,9 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
 
   // Reset all data to defaults (for debugging)
   const resetToDefaults = async () => {
-    try {
-      await AsyncStorage.removeItem(STORAGE_KEYS.PAGES);
+    const success = await PersistenceHelper.removeData(STORAGE_KEYS.PAGES);
+    if (success) {
       setPages(defaultPages);
-    } catch (error) {
-      console.error('Error resetting data:', error);
     }
   };
 
@@ -334,14 +354,8 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
       };
 
       // Save updated pages to AsyncStorage
-      (async () => {
-        try {
-          await AsyncStorage.setItem(STORAGE_KEYS.PAGES, JSON.stringify(updatedPages));
-          console.log(`Saved widget ${widgetId} thumbnail toggle to AsyncStorage successfully`);
-        } catch (error) {
-          console.error('Failed to save widget thumbnail toggle:', error);
-        }
-      })();
+      PersistenceHelper.saveData(STORAGE_KEYS.PAGES, updatedPages);
+      console.log(`Saving widget ${widgetId} thumbnail toggle to AsyncStorage`);
       
       return updatedPages;
     });

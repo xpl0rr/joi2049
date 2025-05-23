@@ -159,6 +159,21 @@ export default function FinanceScreen() {
       const keys = await AsyncStorage.getAllKeys();
       const result = await AsyncStorage.multiGet(keys);
       const obj = Object.fromEntries(result);
+      
+      // Make sure we're also separately exporting the activities for backwards compatibility
+      try {
+        if (obj['calendar-db']) {
+          const calendarData = JSON.parse(obj['calendar-db']);
+          if (calendarData.state && calendarData.state.activities) {
+            // Store activities separately as well to ensure they're preserved
+            obj['calendar-activities'] = JSON.stringify(calendarData.state.activities);
+            console.log('Exported activities separately:', calendarData.state.activities.length, 'items');
+          }
+        }
+      } catch (e) {
+        console.error('Error extracting activities for export:', e);
+      }
+      
       const json = JSON.stringify(obj);
       const fileUri = FileSystem.documentDirectory + 'joi_backup.json';
       await FileSystem.writeAsStringAsync(fileUri, json, { encoding: FileSystem.EncodingType.UTF8 });
@@ -191,6 +206,33 @@ const importData = async () => {
       if (obj["joiapp_calendar_rings"] && !obj["calendar-db"]) {
         obj["calendar-db"] = obj["joiapp_calendar_rings"];
         console.log('Mapped joiapp_calendar_rings to calendar-db');
+      }
+      
+      // Ensure calendar activities are preserved
+      try {
+        // If the calendar-db exists, make sure it has the activities array
+        if (obj['calendar-db']) {
+          const calendarData = JSON.parse(obj['calendar-db']);
+          console.log('Calendar data:', calendarData);
+          
+          // If there's no activities array or it's empty in the import but was in the previous state
+          if (!calendarData.state || !calendarData.state.activities || calendarData.state.activities.length === 0) {
+            console.log('No activities found in import, checking for separate activities');
+            
+            // Check if activities were separately exported
+            if (obj['calendar-activities']) {
+              console.log('Found separate calendar-activities');
+              const activitiesData = JSON.parse(obj['calendar-activities']);
+              if (calendarData.state) {
+                calendarData.state.activities = activitiesData;
+                console.log('Merged activities into calendar data:', activitiesData);
+                obj['calendar-db'] = JSON.stringify(calendarData);
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Error processing calendar activities:', e);
       }
       
       // Create a new object with unpacked values for selected keys
@@ -320,11 +362,11 @@ const importData = async () => {
         onUpdate={() => {}}
       />
       <View style={styles.buttonContainer}>
-        <Pressable style={[styles.button, { backgroundColor: colorScheme === 'dark' ? Colors.dark.tint : Colors.light.tint }]} onPress={exportData}>
-          <Text style={styles.buttonText}>Export Data</Text>
+        <Pressable style={[styles.iconButton, { backgroundColor: colorScheme === 'dark' ? Colors.dark.tint : Colors.light.tint }]} onPress={exportData}>
+          <IconSymbol name="arrow.up" size={24} color="#FFFFFF" />
         </Pressable>
-        <Pressable style={[styles.button, { backgroundColor: colorScheme === 'dark' ? Colors.dark.tint : Colors.light.tint }]} onPress={importData}>
-          <Text style={styles.buttonText}>Import Data</Text>
+        <Pressable style={[styles.iconButton, { backgroundColor: colorScheme === 'dark' ? Colors.dark.tint : Colors.light.tint }]} onPress={importData}>
+          <IconSymbol name="arrow.down" size={24} color="#FFFFFF" />
         </Pressable>
       </View>
       {/* Discretionary Modal */}
@@ -414,6 +456,13 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,
+  },
+  iconButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   buttonText: {
     color: '#FFFFFF',

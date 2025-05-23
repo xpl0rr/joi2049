@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, FlatList, Modal, TextInput, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/Colors';
@@ -8,12 +8,22 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 
 export default function DashboardScreen() {
   const [calendarConfig, setCalendarConfig] = useState({ events: [], view: 'month', selectedDate: new Date().toISOString() });
+  const [newActivity, setNewActivity] = useState('');
+  const [modalVisible, setModalVisible] = useState(false);
+  
+  // Get store functions and state
+  const initialize = useCalendarStore(state => state.initialize);
   const db = useCalendarStore(state => state.db);
   const activities = useCalendarStore(state => state.activities);
   const addActivityStore = useCalendarStore(state => state.addActivity);
   const removeActivityStore = useCalendarStore(state => state.removeActivity);
-  const [newActivity, setNewActivity] = useState('');
-  const [modalVisible, setModalVisible] = useState(false);
+  const initialized = useCalendarStore(state => state.initialized);
+  
+  // Initialize the store when the component mounts
+  useEffect(() => {
+    console.log('DashboardScreen: initializing calendar store');
+    initialize();
+  }, [initialize]);
 
   // Use local date components to generate ISO date key (YYYY-MM-DD)
   const now = new Date();

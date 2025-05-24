@@ -130,32 +130,36 @@ export default function NotesScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }} edges={['top']}>      
-      <View style={styles.mainContainer}>
+    <SafeAreaView style={styles.container} edges={['top']}>      
+      <Text style={styles.headerText}>Notes</Text>
+      
+      <View style={styles.contentContainer}>
         <View style={styles.header}>
-          <Text style={[styles.sectionTitle, { color: '#000000', textAlign: 'center' }]}>Notes</Text>
-          <Pressable onPress={openModal} style={[styles.addButton, { backgroundColor: '#4D82F3' }]}>
+          <Text style={styles.cardTitle}>My Notes</Text>
+          <Pressable onPress={openModal} style={styles.addButton}>
             <IconSymbol name="plus" size={20} color="#FFF" />
           </Pressable>
         </View>
         
-        <FlatList
-          style={styles.notesList}
-          data={notes}
-          keyExtractor={(_, index) => index.toString()}
-          ListEmptyComponent={<Text style={[styles.emptyText, { color: '#666666' }]}>No notes yet.</Text>}
-          renderItem={({ item, index }) => (
-            <View style={styles.item}>
-              <Text style={[styles.itemText, { color: '#000000' }]}>{item}</Text>
-              <Pressable onPress={() => removeNote(index)} style={styles.deleteButton}>
-                <IconSymbol name="trash" size={20} color="#EF4444" />
-              </Pressable>
-            </View>
-          )}
-        />
+        <View style={styles.notesCard}>
+          <FlatList
+            style={styles.notesList}
+            data={notes}
+            keyExtractor={(_, index) => index.toString()}
+            ListEmptyComponent={<Text style={styles.emptyText}>No notes yet.</Text>}
+            renderItem={({ item, index }) => (
+              <View style={styles.row}>
+                <Text style={styles.itemText}>{item}</Text>
+                <Pressable onPress={() => removeNote(index)} style={styles.deleteButton}>
+                  <IconSymbol name="trash" size={20} color="#EF4444" />
+                </Pressable>
+              </View>
+            )}
+          />
+        </View>
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>New Note</Text>
             <TextInput
               style={styles.input}
@@ -163,12 +167,12 @@ export default function NotesScreen() {
               value={newNote}
               onChangeText={setNewNote}
             />
-            <View style={styles.modalActions}>
-              <Pressable style={styles.saveButton} onPress={addNote}>
-                <Text style={styles.saveText}>Add</Text>
+            <View style={styles.buttonRow}>
+              <Pressable style={[styles.button, styles.primaryButton]} onPress={addNote}>
+                <Text style={[styles.buttonText, styles.primaryButtonText]}>Add</Text>
               </Pressable>
-              <Pressable style={styles.cancelButton} onPress={closeModal}>
-                <Text style={styles.cancelText}>Cancel</Text>
+              <Pressable style={[styles.button, styles.secondaryButton]} onPress={closeModal}>
+                <Text style={[styles.buttonText, styles.secondaryButtonText]}>Cancel</Text>
               </Pressable>
             </View>
           </View>
@@ -176,24 +180,22 @@ export default function NotesScreen() {
       </Modal>
       
       {/* Export/Import Buttons at bottom */}
-      <View style={styles.buttonContainer}>
-        <View style={styles.buttonWithLabel}>
+      <View style={styles.totalContainer}>
+        <View style={styles.buttonRow}>
           <TouchableOpacity 
-            style={[styles.iconButton, { backgroundColor: '#4D82F3' }]} 
+            style={[styles.button, styles.primaryButton]} 
             onPress={exportData}
           >
-            <IconSymbol name="arrow.up" size={24} color="#FFFFFF" />
+            <IconSymbol name="arrow.up" size={16} color="#FFFFFF" style={{marginRight: 8}} />
+            <Text style={[styles.buttonText, styles.primaryButtonText]}>Export Data</Text>
           </TouchableOpacity>
-          <Text style={styles.buttonLabel}>Export</Text>
-        </View>
-        <View style={styles.buttonWithLabel}>
           <TouchableOpacity 
-            style={[styles.iconButton, { backgroundColor: '#4D82F3' }]} 
+            style={[styles.button, styles.primaryButton]} 
             onPress={importData}
           >
-            <IconSymbol name="arrow.down" size={24} color="#FFFFFF" />
+            <IconSymbol name="arrow.down" size={16} color="#FFFFFF" style={{marginRight: 8}} />
+            <Text style={[styles.buttonText, styles.primaryButtonText]}>Import Data</Text>
           </TouchableOpacity>
-          <Text style={styles.buttonLabel}>Import</Text>
         </View>
       </View>
       </View>
@@ -202,140 +204,139 @@ export default function NotesScreen() {
 }
 
 const styles = StyleSheet.create({
-  mainContainer: {
+  container: {
     flex: 1,
-    padding: 16,
-    display: 'flex',
-    flexDirection: 'column',
     backgroundColor: '#FFFFFF',
+    paddingTop: 16,
+  },
+  headerText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  contentContainer: {
+    flex: 1,
+    paddingHorizontal: 16,
   },
   header: { 
     flexDirection: 'row', 
     justifyContent: 'space-between', 
     alignItems: 'center', 
-    marginTop: 16, 
-    marginBottom: 12 
+    marginBottom: 16
   },
-  sectionTitle: { 
+  cardTitle: { 
     fontSize: 18, 
-    fontWeight: '600' 
+    fontWeight: 'bold',
+    color: '#000000',
+  },
+  notesCard: {
+    backgroundColor: '#F5F5F5',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    flex: 1,
   },
   notesList: {
     flex: 1,
   },
   addButton: { 
-    width: 32, 
-    height: 32, 
+    width: 40, 
+    height: 40, 
     backgroundColor: '#4D82F3', 
-    borderRadius: 16, 
+    borderRadius: 20, 
     alignItems: 'center', 
     justifyContent: 'center' 
   },
-  item: { 
+  row: { 
     flexDirection: 'row', 
     justifyContent: 'space-between', 
+    alignItems: 'center', 
     paddingVertical: 12, 
     borderBottomWidth: 1, 
-    borderBottomColor: '#E5E7EB' 
+    borderBottomColor: '#EEEEEE' 
   },
   itemText: { 
     fontSize: 16, 
-    color: '#000000' 
+    color: '#000000',
+    flex: 1,
   },
   emptyText: { 
     textAlign: 'center', 
-    color: '#6B7280', 
+    color: '#AAAAAA', 
     marginTop: 20, 
     fontSize: 16 
   },
   modalOverlay: { 
     flex: 1, 
-    backgroundColor: 'rgba(0,0,0,0.5)', 
     justifyContent: 'center', 
-    alignItems: 'center' 
+    alignItems: 'center', 
+    backgroundColor: 'rgba(0,0,0,0.5)' 
   },
-  modalContainer: { 
-    width: '90%', 
+  modalContent: { 
+    width: '80%', 
     backgroundColor: '#FFFFFF', 
-    borderRadius: 8, 
-    padding: 16 
+    padding: 20, 
+    borderRadius: 16 
   },
   modalTitle: { 
     fontSize: 18, 
-    fontWeight: '600', 
-    marginBottom: 12,
+    fontWeight: 'bold', 
+    marginBottom: 16,
+    textAlign: 'center',
     color: '#000000'
   },
   input: { 
     borderWidth: 1, 
-    borderColor: '#D1D5DB', 
-    borderRadius: 4, 
+    borderColor: '#DDDDDD', 
+    borderRadius: 8, 
     padding: 8, 
-    marginBottom: 12,
+    marginBottom: 10, 
+    backgroundColor: '#FFFFFF',
     color: '#000000' 
   },
-  modalActions: { 
+  buttonRow: { 
     flexDirection: 'row', 
     justifyContent: 'space-between', 
-    marginTop: 12 
+    marginTop: 16 
   },
-  saveButton: { 
+  button: { 
+    paddingVertical: 10, 
+    paddingHorizontal: 16, 
+    borderRadius: 8, 
+    alignItems: 'center', 
+    justifyContent: 'center',
+    flexDirection: 'row',
+    flex: 1,
+    marginHorizontal: 5,
+  },
+  primaryButton: { 
     backgroundColor: '#4D82F3', 
-    paddingVertical: 12, 
-    paddingHorizontal: 16, 
-    borderRadius: 8, 
-    alignItems: 'center', 
-    flex: 1, 
-    marginRight: 8 
   },
-  saveText: { 
-    color: 'white', 
-    fontWeight: '600' 
+  secondaryButton: { 
+    backgroundColor: '#EEEEEE', 
   },
-  cancelButton: { 
-    borderWidth: 1, 
-    borderColor: '#E5E7EB', 
-    paddingVertical: 12, 
-    paddingHorizontal: 16, 
-    borderRadius: 8, 
-    alignItems: 'center', 
-    flex: 1, 
-    marginLeft: 8 
+  buttonText: { 
+    fontSize: 16, 
+    fontWeight: '500', 
   },
-  cancelText: { 
-    color: '#6B7280', 
-    fontWeight: '600' 
+  primaryButtonText: { 
+    color: '#FFFFFF', 
   },
-  buttonContainer: { 
-    flexDirection: 'row', 
-    justifyContent: 'center', 
-    marginBottom: -5,
-    paddingTop: 10,
+  secondaryButtonText: { 
+    color: '#000000', 
+  },
+  totalContainer: {
     marginTop: 'auto',
-  },
-  buttonWithLabel: {
-    alignItems: 'center',
-    marginHorizontal: 15,
-  },
-  buttonLabel: {
-    fontSize: 12,
-    color: '#666666',
-    marginTop: 4,
-  },
-  iconButton: { 
-    width: 40, 
-    height: 40, 
-    borderRadius: 20, 
-    marginLeft: 12, 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 3,
+    marginBottom: 10,
+    paddingVertical: 15,
+    paddingHorizontal: 16,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 16,
+    marginHorizontal: 16,
   },
   deleteButton: { 
-    padding: 4 
+    padding: 8,
+    marginLeft: 8,
   },
 });

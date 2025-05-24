@@ -582,9 +582,11 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     width: '100%',
     backgroundColor: 'transparent',
+    minHeight: 240, // Minimal height needed
+    marginBottom: 0,
+    paddingBottom: 0,
   },
   header: {
     flexDirection: 'row',
@@ -608,7 +610,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F3F4F6',
   },
   monthContainer: {
-    flex: 1,
+    minHeight: 220, // Further reduced
   },
   weekdaysRow: {
     flexDirection: 'row',
@@ -627,11 +629,12 @@ const styles = StyleSheet.create({
   daysGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 10,
+    marginBottom: 0, // No bottom margin
+    minHeight: 200, // Minimal height needed for all rows
   },
   dayCell: {
     width: '14.28%',
-    aspectRatio: 1,
+    aspectRatio: 0.9, // Slightly shorter height than width
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',

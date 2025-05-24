@@ -47,6 +47,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: '#e0e0e0',
+    marginTop: 6, // Add 6px gap above tab bar
   },
   tab: {
     flex: 1,

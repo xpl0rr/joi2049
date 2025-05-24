@@ -46,23 +46,32 @@ export default function DashboardScreen() {
           <IconSymbol name="plus" size={20} color="#FFF" />
         </Pressable>
       </View>
-      <FlatList
-        data={activities}
-        keyExtractor={item => item}
-        ListEmptyComponent={<Text style={styles.emptyText}>No activities yet.</Text>}
-        renderItem={({ item }) => (
-          <View style={styles.item}>
-            <Text style={styles.itemText}>{item}</Text>
-            <Pressable onPress={() => removeActivityStore(item)} style={styles.deleteButton}>
-              <IconSymbol name="trash" size={20} color="#EF4444" />
-            </Pressable>
-          </View>
-        )}
-      />
-      <CalendarWidget
-        events={calendarConfig.events}
-        onUpdate={config => setCalendarConfig(config)}
-      />
+      <View style={styles.contentContainer}>
+        <View style={styles.activitiesSection}>
+          <FlatList
+            data={activities}
+            style={styles.activityList}
+            keyExtractor={item => item}
+            ListEmptyComponent={<Text style={styles.emptyText}>No activities yet.</Text>}
+            renderItem={({ item }) => (
+              <View style={styles.item}>
+                <Text style={styles.itemText}>{item}</Text>
+                <Pressable onPress={() => removeActivityStore(item)} style={styles.deleteButton}>
+                  <IconSymbol name="trash" size={20} color="#EF4444" />
+                </Pressable>
+              </View>
+            )}
+          />
+        </View>
+        <View style={styles.calendarWrapper}>
+          <CalendarWidget
+            events={calendarConfig.events}
+            onUpdate={config => setCalendarConfig(config)}
+          />
+        </View>
+        {/* Invisible spacer to push content up */}
+        <View style={{height: 0}} />
+      </View>
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
@@ -89,10 +98,14 @@ export default function DashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
+  container: { flex: 1, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 0 }, // Remove general bottom padding
+  contentContainer: { flex: 1, flexDirection: 'column' }, // Remove position: 'relative'
   header: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginTop: 16, marginBottom: 12 },
   title: { position: 'absolute', left: 16, right: 16, textAlign: 'center', fontSize: 18, fontWeight: '600' },
   addButton: { width: 32, height: 32, backgroundColor: '#4D82F3', borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  activitiesSection: { marginBottom: 12 },
+  activityList: { maxHeight: 150 }, // Limit height of activity list
+  calendarWrapper: { flex: 1, justifyContent: 'flex-end', marginBottom: 0, paddingBottom: 0 }, // Use flex to push to bottom
   item: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
   itemText: { fontSize: 16, color: '#000' },
   emptyText: { textAlign: 'center', color: '#6B7280', marginTop: 20 },

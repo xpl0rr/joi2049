@@ -81,7 +81,8 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    marginBottom: 70, // Reduced bottom margin to match smaller tab bar
+    marginBottom: 60, // Exact tab bar height with zero gap
+    paddingBottom: 0,
   },
   tabBarContainer: {
     position: 'absolute',

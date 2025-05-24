@@ -42,8 +42,8 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     justifyContent: 'space-evenly',
-    alignItems: 'center',
-    height: 60,
+    alignItems: 'flex-start', // Change from center to flex-start to allow top alignment
+    height: 60, // Keep the same height
     backgroundColor: '#fff',
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: '#e0e0e0',
@@ -51,5 +51,8 @@ const styles = StyleSheet.create({
   tab: {
     flex: 1,
     alignItems: 'center',
+    paddingBottom: 12, // Add padding at the bottom to move touch target up
+    justifyContent: 'flex-start', // Align to top
+    paddingTop: 10, // Add padding at top so icon isn't too close to top edge
   },
 });

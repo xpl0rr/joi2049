@@ -1,7 +1,7 @@
 // ChartWidget.tsx
 import React, { useMemo, useState } from 'react';
-import { StyleSheet, View, Text, Dimensions } from 'react-native';
-import Svg, { Polyline, Circle } from 'react-native-svg';
+import { StyleSheet, View, Text as RNText, Dimensions } from 'react-native';
+import Svg, { Polyline, Circle, Text } from 'react-native-svg';
 
 /* ──────────── types ──────────── */
 export interface BillEntry {
@@ -21,6 +21,8 @@ interface ChartWidgetProps {
   primaryColor?: string;
   /** color for secondary dataset (discretionary) */
   secondaryColor?: string;
+  /** size of the data points in the chart */
+  pointSize?: number;
   onUpdate: (cfg: any) => void;
 }
 
@@ -54,6 +56,7 @@ const ChartWidget: React.FC<ChartWidgetProps> = ({
   secondaryData = [],
   primaryColor = '#000',
   secondaryColor = '#EF4444',
+  pointSize = 4,
   onUpdate,
 }) => {
   /* 1. Aggregate totals by month, skip bad data */
@@ -127,44 +130,54 @@ const ChartWidget: React.FC<ChartWidgetProps> = ({
         setChartW(e.nativeEvent.layout.width - PAD_H * 2 - 20)
       }
     >
-      <Text style={styles.title}>{`${title}: $${total.toFixed(2)}`}</Text>
+      {title ? <RNText style={styles.title}>{`${title}${total > 0 ? ': $' + total.toFixed(2) : ''}`}</RNText> : null}
 
       {/* Y-axis */}
       <View style={styles.yAxis}>
         {yTicks.map(t => (
-          <Text key={t} style={styles.yLabel}>
+          <RNText key={t} style={styles.yLabel}>
             {t.toFixed(0)}
-          </Text>
+          </RNText>
         ))}
       </View>
 
       {/* Chart */}
       <View style={styles.chartArea}>
         <Svg width={chartW} height={CHART_H}>
-          {segmentsPrimary.map((seg, i) => (
-            <Polyline
-              key={i}
-              points={seg.map(p => `${p.x},${p.y}`).join(' ')}
-              stroke={primaryColor}
-              strokeWidth={2}
-              fill="none"
-            />
-          ))}
-          {segmentsPrimary.flat().map((p, i) => (
-            <Circle key={i} cx={p.x} cy={p.y} r={3} fill={primaryColor} />
-          ))}
-          {segmentsSecondary.map((seg, i) => (
-            <Polyline
-              key={`sec-${i}`}
-              points={seg.map(p => `${p.x},${p.y}`).join(' ')}
-              stroke={secondaryColor}
-              strokeWidth={2}
-              fill="none"
-            />
-          ))}
-          {segmentsSecondary.flat().map((p, i) => (
-            <Circle key={`sec-point-${i}`} cx={p.x} cy={p.y} r={3} fill={secondaryColor} />
-          ))}
+          {/* Only draw the month that has data */}
+          {data.map((item, index) => {
+            const m = safeMonth(item.date) ?? 0;
+            const x = (m * chartW) / (MONTHS.length - 1);
+            const y = yMax > 0 ? CHART_H - (item.amount / yMax) * CHART_H : CHART_H;
+            
+            return (
+              <Circle
+                key={`single-dot-${index}`}
+                cx={x}
+                cy={y}
+                r={pointSize}
+                fill={primaryColor}
+                strokeWidth={1}
+                stroke="white"
+              />
+            );
+          })}
+          {/* Month labels */}
+          {MONTHS.map((m, i) => {
+            const x = (i * chartW) / (MONTHS.length - 1);
+            return (
+              <Text
+                key={m}
+                x={x}
+                y={CHART_H + 15}
+                textAnchor="middle"
+                fill="#A3A3A3"
+                fontSize={12}
+              >
+                {m}
+              </Text>
+            );
+          })}
         </Svg>
       </View>
 

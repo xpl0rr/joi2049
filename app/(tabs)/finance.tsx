@@ -1,28 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  StyleSheet, 
-  View, 
-  Text, 
-  Modal, 
-  Pressable, 
-  TextInput, 
-  FlatList, 
-  Switch, 
-  TouchableOpacity, 
-  ScrollView,
-  Alert
-} from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, TextInput, Modal, Switch, Pressable, ScrollView, Dimensions, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import ChartWidget, { BillEntry } from '@/components/widgets/ChartWidget';
+import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-// import { LinearGradient } from 'expo-linear-gradient';
 import * as FileSystem from 'expo-file-system';
 import * as DocumentPicker from 'expo-document-picker';
-import { shareAsync } from 'expo-sharing';
+import * as Sharing from 'expo-sharing';
 import * as Updates from 'expo-updates';
+import { LineChart } from 'react-native-chart-kit';
 
 const STORAGE_KEY = '@bills';
 const DISCRETIONARY_KEY = '@discretionary';
@@ -122,6 +109,8 @@ export default function FinanceScreen() {
   };
 
   const toggleRecurring = (id: string) => {
+    // This toggle just marks bills as recurring for the current month
+    // It doesn't auto-populate them into future months
     setBills(prev => prev.map(bill => bill.id === id ? { ...bill, recurring: !bill.recurring } : bill));
   };
 
@@ -144,28 +133,33 @@ export default function FinanceScreen() {
     setDiscretionary(prev => prev.filter(item => item.id !== id));
   };
 
-  const monthlyData = Array.from({ length: 12 }).map((_, i) => {
-    const sum = bills.reduce((acc, bill) => {
-      const include = bill.createdMonth === i || (bill.recurring && bill.createdMonth <= i);
-      return acc + (include ? bill.amount : 0);
-    }, 0);
-    const labels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    return { label: labels[i], value: parseFloat(sum.toFixed(2)) };
-  });
+  // Get the current month (0-11)
+  const currentMonth = new Date().getMonth();
+  
+  // Calculate total bills for current month
+  const billsTotal = bills.reduce((acc, bill) => {
+    // Only include if it's in the current month
+    const include = bill.createdMonth === currentMonth || (bill.recurring && bill.createdMonth <= currentMonth);
+    return acc + (include ? bill.amount : 0);
+  }, 0);
+  
+  // Calculate total discretionary spending for current month
+  const discretionaryTotal = discretionary.reduce((acc, item) => {
+    // Only include if it's in the current month
+    const include = item.createdMonth === currentMonth;
+    return acc + (include ? item.amount : 0);
+  }, 0);
+  
+  // Total spending for current month
+  const totalSpending = billsTotal + discretionaryTotal;
 
-  const chartEntries: BillEntry[] = monthlyData.map((item, i) => ({
-    date: new Date(new Date().getFullYear(), i, 1),
-    amount: item.value,
-  }));
+  // Prepare chart data for the current month only
+  type BillEntry = {
+    date: Date;
+    amount: number;
+  };
 
-  // Compute secondary (discretionary) series for chart
-  const chartEntriesSecondary: BillEntry[] = Array.from({ length: 12 }).map((_, i) => {
-    const sum = discretionary.reduce((acc, item) => {
-      const include = item.createdMonth === i || (item.recurring && item.createdMonth <= i);
-      return acc + (include ? item.amount : 0);
-    }, 0);
-    return { date: new Date(new Date().getFullYear(), i, 1), amount: sum };
-  });
+  // We're not using chart entries anymore - using a simple dot instead
 
   // Exports and imports for backup
   const exportData = async () => {
@@ -191,7 +185,7 @@ export default function FinanceScreen() {
       const json = JSON.stringify(obj);
       const fileUri = FileSystem.documentDirectory + 'joi_backup.json';
       await FileSystem.writeAsStringAsync(fileUri, json, { encoding: FileSystem.EncodingType.UTF8 });
-      await shareAsync(fileUri, { UTI: 'public.json', mimeType: 'application/json' });
+      await Sharing.shareAsync(fileUri, { UTI: 'public.json', mimeType: 'application/json' });
     } catch (e) {
       console.error(e);
       Alert.alert('Export Failed', 'Could not export data.');
@@ -280,20 +274,21 @@ export default function FinanceScreen() {
 
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colorScheme === 'dark' ? Colors.dark.background : Colors.light.background }}>
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }} edges={['top']}>
+      <View style={styles.mainContainer}>
+        <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         {/* Header with Title */}
         <View style={styles.headerContainer}>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>Finance</Text>
+          <Text style={[styles.sectionTitle, { color: '#000000', textAlign: 'center' }]}>Finance</Text>
         </View>
         
         {/* Bills Section */}
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
             <TouchableOpacity onPress={() => setShowBills(prev => !prev)} style={{ flex: 1 }}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Bills</Text>
+              <Text style={[styles.sectionTitle, { color: '#000000' }]}>Bills</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.addButton, { backgroundColor: colors.tint }]} onPress={openModal}>
+            <TouchableOpacity style={[styles.addButton, { backgroundColor: '#4D82F3' }]} onPress={openModal}>
               <IconSymbol name="plus" size={20} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
@@ -301,9 +296,7 @@ export default function FinanceScreen() {
           {showBills && (
             <View style={styles.billsList}>
               {bills.length === 0 ? (
-                <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-                  No bills added.
-                </Text>
+                <Text style={[styles.emptyText, { color: '#666666' }]}>No bills added.</Text>
               ) : (
                 bills.map(item => (
                   <View key={item.id} style={styles.billItem}>
@@ -311,12 +304,12 @@ export default function FinanceScreen() {
                       <Switch 
                         value={item.recurring} 
                         onValueChange={() => toggleRecurring(item.id)} 
-                        thumbColor={item.recurring ? colors.tint : undefined} 
+                        thumbColor={item.recurring ? '#4D82F3' : undefined} 
                       />
-                      <Text style={[styles.billText, { color: colors.text, marginLeft: 8 }]}>
+                      <Text style={[styles.billText, { color: '#000000', marginLeft: 8 }]}>
                         {item.name}
                       </Text>
-                      <Text style={[styles.billText, { color: colors.text, marginLeft: 8 }]}>
+                      <Text style={[styles.billText, { color: '#000000', marginLeft: 8 }]}>
                         ${item.amount.toFixed(2)}
                       </Text>
                     </View>
@@ -334,9 +327,9 @@ export default function FinanceScreen() {
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
             <TouchableOpacity onPress={() => setShowDiscretionary(prev => !prev)} style={{ flex: 1 }}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Discretionary</Text>
+              <Text style={[styles.sectionTitle, { color: '#000000' }]}>Discretionary</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.addButton, { backgroundColor: '#EF4444' }]} onPress={openModalDiscretionary}>
+            <TouchableOpacity style={[styles.addButton, { backgroundColor: '#4D82F3' }]} onPress={openModalDiscretionary}>
               <IconSymbol name="plus" size={20} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
@@ -344,16 +337,14 @@ export default function FinanceScreen() {
           {showDiscretionary && (
             <View style={styles.billsList}>
               {discretionary.length === 0 ? (
-                <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-                  No discretionary items.
-                </Text>
+                <Text style={[styles.emptyText, { color: '#666666' }]}>No discretionary items.</Text>
               ) : (
                 discretionary.map(item => (
                   <View key={item.id} style={styles.billItem}>
-                    <Text style={[styles.billText, { color: colors.text }]}>
+                    <Text style={[styles.billText, { color: '#000000' }]}>
                       {item.name}
                     </Text>
-                    <Text style={[styles.billText, { color: colors.text }]}>
+                    <Text style={[styles.billText, { color: '#000000' }]}>
                       ${item.amount.toFixed(2)}
                     </Text>
                     <Pressable onPress={() => removeDiscretionary(item.id)} style={{ padding: 4 }}>
@@ -365,35 +356,71 @@ export default function FinanceScreen() {
             </View>
           )}
         </View>
+        </ScrollView>
         
-        {/* Chart */}
+        {/* Monthly spending summary */}
+        <View style={styles.totalContainer}>
+          <Text style={styles.totalTitle}>Spent this month: ${totalSpending.toFixed(2)}</Text>
+        </View>
+        
+        {/* Chart at bottom */}
         <View style={styles.chartContainer}>
-          <ChartWidget
-            title="Bills Over Time"
-            data={chartEntries}
-            secondaryData={chartEntriesSecondary}
-            primaryColor={colorScheme === 'dark' ? Colors.dark.tabIconSelected : Colors.light.tabIconSelected}
-            secondaryColor={colorScheme === 'dark' ? Colors.dark.error : Colors.light.error}
-            onUpdate={() => {}}
+          <LineChart
+            data={{
+              labels: ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'],
+              datasets: [
+                {
+                  data: [
+                    currentMonth === 0 ? totalSpending : 0,
+                    currentMonth === 1 ? totalSpending : 0,
+                    currentMonth === 2 ? totalSpending : 0,
+                    currentMonth === 3 ? totalSpending : 0,
+                    currentMonth === 4 ? totalSpending : 0,
+                    currentMonth === 5 ? totalSpending : 0,
+                    currentMonth === 6 ? totalSpending : 0,
+                    currentMonth === 7 ? totalSpending : 0,
+                    currentMonth === 8 ? totalSpending : 0,
+                    currentMonth === 9 ? totalSpending : 0,
+                    currentMonth === 10 ? totalSpending : 0,
+                    currentMonth === 11 ? totalSpending : 0
+                  ]
+                }
+              ]
+            }}
+            width={Dimensions.get('window').width - 32} // from react-native
+            height={180}
+            yAxisLabel="$"
+            chartConfig={{
+              backgroundColor: '#FFFFFF',
+              backgroundGradientFrom: '#FFFFFF',
+              backgroundGradientTo: '#FFFFFF',
+              decimalPlaces: 0,
+              color: () => '#4D82F3',
+              labelColor: () => '#AAAAAA',
+              style: {
+                borderRadius: 16
+              },
+              propsForDots: {
+                r: '8',
+                strokeWidth: '2',
+                stroke: '#FFFFFF'
+              }
+            }}
+            bezier
+            style={{
+              marginVertical: 8,
+              borderRadius: 16
+            }}
+            withInnerLines={false}
+            withOuterLines={false}
+            withVerticalLines={false}
+            withHorizontalLines={false}
+            withVerticalLabels={true}
+            withHorizontalLabels={false}
+            hidePointsAtIndex={Array.from({ length: 12 }, (_, i) => i !== currentMonth ? i : -1).filter(i => i !== -1)}
           />
         </View>
-        
-        {/* Export/Import Buttons */}
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity 
-            style={[styles.iconButton, { backgroundColor: colors.tint }]} 
-            onPress={exportData}
-          >
-            <IconSymbol name="arrow.up" size={24} color="#FFFFFF" />
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.iconButton, { backgroundColor: colors.tint }]} 
-            onPress={importData}
-          >
-            <IconSymbol name="arrow.down" size={24} color="#FFFFFF" />
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+      </View>
       
       {/* Bill Modal */}
       <Modal visible={modalVisible} transparent animationType="slide">
@@ -459,27 +486,31 @@ export default function FinanceScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  mainContainer: {
     flex: 1,
     padding: 16,
+    display: 'flex',
+    flexDirection: 'column',
+    backgroundColor: '#FFFFFF',
+  },
+  scrollContainer: {
+    flex: 1,
   },
   headerContainer: {
     marginBottom: 16,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
+    alignItems: 'center',
   },
 
   sectionContainer: {
     marginBottom: 16,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: '#F5F5F5',
     borderRadius: 16,
+    overflow: 'hidden',
     padding: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
     elevation: 2,
   },
   sectionHeader: { 
@@ -519,25 +550,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center' 
   },
   chartContainer: {
-    marginBottom: 20,
+    marginTop: 5,
+    marginBottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  buttonContainer: { 
-    flexDirection: 'row', 
-    justifyContent: 'flex-end', 
-    marginBottom: 40,
+  totalContainer: {
+    marginTop: 'auto',
+    marginBottom: 10,
+    paddingVertical: 15,
+    paddingHorizontal: 16,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 16,
+    marginHorizontal: 5,
+    alignItems: 'center',
   },
-  iconButton: { 
-    width: 40, 
-    height: 40, 
-    borderRadius: 20, 
-    marginLeft: 12, 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 3,
+  totalTitle: {
+    fontSize: 18,
+    color: '#000000',
+    textAlign: 'center',
   },
   modalOverlay: { 
     flex: 1, 

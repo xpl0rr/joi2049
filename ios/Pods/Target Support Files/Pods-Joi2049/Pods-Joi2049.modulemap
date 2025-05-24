@@ -1,0 +1,6 @@
+module Pods_Joi2049 {
+  umbrella header "Pods-Joi2049-umbrella.h"
+
+  export *
+  module * { export * }
+}

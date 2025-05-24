@@ -39,71 +39,192 @@ export default function DashboardScreen() {
   const removeActivity = (key: string) => removeActivityStore(key);
 
   return (
-    <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: Colors.light.background }]}>      
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: '#000' }]}>Home</Text>
-        <Pressable style={styles.addButton} onPress={openModal}>
-          <IconSymbol name="plus" size={20} color="#FFF" />
-        </Pressable>
-      </View>
-      <FlatList
-        data={activities}
-        keyExtractor={item => item}
-        ListEmptyComponent={<Text style={styles.emptyText}>No activities yet.</Text>}
-        renderItem={({ item }) => (
-          <View style={styles.item}>
-            <Text style={styles.itemText}>{item}</Text>
-            <Pressable onPress={() => removeActivityStore(item)} style={styles.deleteButton}>
-              <IconSymbol name="trash" size={20} color="#EF4444" />
+    <SafeAreaView edges={['top']} style={styles.container}>      
+      <Text style={styles.headerText}>Home</Text>
+      
+      <View style={styles.contentContainer}>
+        {/* Activities Card */}
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardTitle}>Activities</Text>
+            <Pressable style={styles.addButton} onPress={openModal}>
+              <IconSymbol name="plus" size={20} color="#FFF" />
             </Pressable>
           </View>
-        )}
-      />
-      <CalendarWidget
-        events={calendarConfig.events}
-        onUpdate={config => setCalendarConfig(config)}
-      />
+          
+          <FlatList
+            data={activities}
+            keyExtractor={item => item}
+            ListEmptyComponent={<Text style={styles.emptyText}>No activities yet.</Text>}
+            renderItem={({ item }) => (
+              <View style={styles.row}>
+                <Text style={styles.itemText}>{item}</Text>
+                <Pressable onPress={() => removeActivityStore(item)} style={styles.deleteButton}>
+                  <IconSymbol name="trash" size={20} color="#EF4444" />
+                </Pressable>
+              </View>
+            )}
+            style={styles.listContainer}
+          />
+        </View>
+        
+        {/* Calendar Card */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Calendar</Text>
+          <CalendarWidget
+            events={calendarConfig.events}
+            onUpdate={config => setCalendarConfig(config)}
+          />
+        </View>
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>New activity</Text>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>New Activity</Text>
             <TextInput
               style={styles.input}
               placeholder="Activity name"
               value={newActivity}
               onChangeText={setNewActivity}
             />
-            <View style={styles.modalActions}>
-              <Pressable style={styles.saveButton} onPress={addActivity}>
-                <Text style={styles.saveText}>Add</Text>
+            <View style={styles.buttonRow}>
+              <Pressable style={[styles.button, styles.primaryButton]} onPress={addActivity}>
+                <Text style={[styles.buttonText, styles.primaryButtonText]}>Add</Text>
               </Pressable>
-              <Pressable style={styles.cancelButton} onPress={() => setModalVisible(false)}>
-                <Text style={styles.cancelText}>Cancel</Text>
+              <Pressable style={[styles.button, styles.secondaryButton]} onPress={() => setModalVisible(false)}>
+                <Text style={[styles.buttonText, styles.secondaryButtonText]}>Cancel</Text>
               </Pressable>
             </View>
           </View>
         </View>
       </Modal>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  header: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginTop: 16, marginBottom: 12 },
-  title: { position: 'absolute', left: 16, right: 16, textAlign: 'center', fontSize: 18, fontWeight: '600' },
-  addButton: { width: 32, height: 32, backgroundColor: '#4D82F3', borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  item: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
-  itemText: { fontSize: 16, color: '#000' },
-  emptyText: { textAlign: 'center', color: '#6B7280', marginTop: 20 },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
-  modalContainer: { width: '90%', backgroundColor: '#FFF', borderRadius: 8, padding: 16 },
-  modalTitle: { fontSize: 18, fontWeight: '600', marginBottom: 12 },
-  input: { borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 4, padding: 8, marginBottom: 12 },
-  modalActions: { flexDirection: 'row', justifyContent: 'flex-end' },
-  saveButton: { backgroundColor: '#4D82F3', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 4, marginRight: 8 },
-  saveText: { color: '#FFF', fontWeight: '600' },
-  cancelButton: { paddingVertical: 8, paddingHorizontal: 16 },
-  cancelText: { color: '#4D82F3', fontWeight: '600' },
-  deleteButton: { padding: 4 },
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    paddingTop: 16,
+  },
+  headerText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  contentContainer: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+  card: {
+    backgroundColor: '#F5F5F5',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000000',
+  },
+  listContainer: {
+    marginBottom: 10,
+  },
+  addButton: { 
+    width: 40, 
+    height: 40, 
+    backgroundColor: '#4D82F3', 
+    borderRadius: 20, 
+    alignItems: 'center', 
+    justifyContent: 'center',
+  },
+  row: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center',
+    paddingVertical: 12, 
+    borderBottomWidth: 1, 
+    borderBottomColor: '#EEEEEE', 
+  },
+  itemText: { 
+    fontSize: 16, 
+    color: '#000000',
+    flex: 1,
+  },
+  emptyText: { 
+    textAlign: 'center', 
+    color: '#AAAAAA', 
+    marginTop: 20, 
+    fontSize: 16,
+  },
+  modalOverlay: { 
+    flex: 1, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    backgroundColor: 'rgba(0,0,0,0.5)', 
+  },
+  modalContent: { 
+    width: '80%', 
+    backgroundColor: '#FFFFFF', 
+    padding: 20, 
+    borderRadius: 16, 
+  },
+  modalTitle: { 
+    fontSize: 18, 
+    fontWeight: 'bold', 
+    marginBottom: 16,
+    textAlign: 'center',
+    color: '#000000',
+  },
+  input: { 
+    borderWidth: 1, 
+    borderColor: '#DDDDDD', 
+    borderRadius: 8, 
+    padding: 8, 
+    marginBottom: 10, 
+    backgroundColor: '#FFFFFF',
+    color: '#000000',
+  },
+  buttonRow: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    marginTop: 16, 
+  },
+  button: { 
+    paddingVertical: 10, 
+    paddingHorizontal: 16, 
+    borderRadius: 8, 
+    alignItems: 'center', 
+    justifyContent: 'center',
+    flex: 1,
+    marginHorizontal: 5,
+  },
+  primaryButton: { 
+    backgroundColor: '#4D82F3', 
+  },
+  secondaryButton: { 
+    backgroundColor: '#EEEEEE', 
+  },
+  buttonText: { 
+    fontSize: 16, 
+    fontWeight: '500', 
+  },
+  primaryButtonText: { 
+    color: '#FFFFFF', 
+  },
+  secondaryButtonText: { 
+    color: '#000000', 
+  },
+  deleteButton: { 
+    padding: 8,
+    marginLeft: 8,
+  },
 });

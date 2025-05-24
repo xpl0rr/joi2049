@@ -365,60 +365,104 @@ export default function FinanceScreen() {
         
         {/* Chart at bottom */}
         <View style={styles.chartContainer}>
-          <LineChart
-            data={{
-              labels: ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'],
-              datasets: [
-                {
-                  data: [
-                    currentMonth === 0 ? totalSpending : 0,
-                    currentMonth === 1 ? totalSpending : 0,
-                    currentMonth === 2 ? totalSpending : 0,
-                    currentMonth === 3 ? totalSpending : 0,
-                    currentMonth === 4 ? totalSpending : 0,
-                    currentMonth === 5 ? totalSpending : 0,
-                    currentMonth === 6 ? totalSpending : 0,
-                    currentMonth === 7 ? totalSpending : 0,
-                    currentMonth === 8 ? totalSpending : 0,
-                    currentMonth === 9 ? totalSpending : 0,
-                    currentMonth === 10 ? totalSpending : 0,
-                    currentMonth === 11 ? totalSpending : 0
+          <View style={styles.chartWithLabels}>
+            {/* Left y-axis with values */}
+            <View style={styles.yAxis}>
+              <View style={styles.yAxisValueContainer}>
+                <Text style={styles.yAxisLabel}>${Math.round(totalSpending)}</Text>
+              </View>
+              <View style={styles.yAxisValueContainer}>
+                <Text style={styles.yAxisLabel}>${Math.round(totalSpending * 0.75)}</Text>
+              </View>
+              <View style={styles.yAxisValueContainer}>
+                <Text style={styles.yAxisLabel}>${Math.round(totalSpending * 0.5)}</Text>
+              </View>
+              <View style={styles.yAxisValueContainer}>
+                <Text style={styles.yAxisLabel}>${Math.round(totalSpending * 0.25)}</Text>
+              </View>
+              <View style={styles.yAxisValueContainer}>
+                <Text style={styles.yAxisLabel}>$0</Text>
+              </View>
+            </View>
+            
+            {/* Main chart */}
+            <View style={styles.chartMainArea}>
+              <LineChart
+                fromZero
+                data={{
+                  labels: ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'],
+                  datasets: [
+                    {
+                      data: [
+                        currentMonth === 0 ? totalSpending : 0,
+                        currentMonth === 1 ? totalSpending : 0,
+                        currentMonth === 2 ? totalSpending : 0,
+                        currentMonth === 3 ? totalSpending : 0,
+                        currentMonth === 4 ? totalSpending : 0,
+                        currentMonth === 5 ? totalSpending : 0,
+                        currentMonth === 6 ? totalSpending : 0,
+                        currentMonth === 7 ? totalSpending : 0,
+                        currentMonth === 8 ? totalSpending : 0,
+                        currentMonth === 9 ? totalSpending : 0,
+                        currentMonth === 10 ? totalSpending : 0,
+                        currentMonth === 11 ? totalSpending : 0
+                      ]
+                    }
                   ]
-                }
-              ]
-            }}
-            width={Dimensions.get('window').width - 32} // from react-native
-            height={180}
-            yAxisLabel="$"
-            chartConfig={{
-              backgroundColor: '#FFFFFF',
-              backgroundGradientFrom: '#FFFFFF',
-              backgroundGradientTo: '#FFFFFF',
-              decimalPlaces: 0,
-              color: () => '#4D82F3',
-              labelColor: () => '#AAAAAA',
-              style: {
-                borderRadius: 16
-              },
-              propsForDots: {
-                r: '8',
-                strokeWidth: '2',
-                stroke: '#FFFFFF'
-              }
-            }}
-            bezier
-            style={{
-              marginVertical: 8,
-              borderRadius: 16
-            }}
-            withInnerLines={false}
-            withOuterLines={false}
-            withVerticalLines={false}
-            withHorizontalLines={false}
-            withVerticalLabels={true}
-            withHorizontalLabels={false}
-            hidePointsAtIndex={Array.from({ length: 12 }, (_, i) => i !== currentMonth ? i : -1).filter(i => i !== -1)}
-          />
+                }}
+                width={Dimensions.get('window').width - 80}
+                height={150}
+                chartConfig={{
+                  backgroundColor: '#FFFFFF',
+                  backgroundGradientFrom: '#FFFFFF',
+                  backgroundGradientTo: '#FFFFFF',
+                  decimalPlaces: 0,
+                  color: () => '#4D82F3',
+                  labelColor: () => 'rgba(0,0,0,0)', // Hide chart's own labels
+                  strokeWidth: 2,
+                  style: {
+                    borderRadius: 16
+                  },
+                  propsForDots: {
+                    r: '6',
+                    strokeWidth: '2',
+                    stroke: '#FFFFFF'
+                  },
+                  propsForLabels: {
+                    fontSize: 0,
+                  },
+                  formatYLabel: (value) => ''
+                }}
+                bezier
+                style={{
+                  marginVertical: 8,
+                  borderRadius: 16,
+                  paddingLeft: 0,
+                  paddingRight: 0
+                }}
+                withInnerLines={false}
+                withOuterLines={true}
+                withVerticalLines={false}
+                withHorizontalLines={true}
+                withVerticalLabels={false}
+                withHorizontalLabels={false}
+                segments={4}
+                hidePointsAtIndex={Array.from({ length: 12 }, (_, i) => i !== currentMonth ? i : -1).filter(i => i !== -1)}
+              />
+            </View>
+          </View>
+          
+          {/* Custom x-axis labels */}
+          <View style={styles.monthsContainer}>
+            {['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'].map((month, index) => (
+              <Text 
+                key={`month-${index}`}
+                style={[styles.monthLabel, index === currentMonth && styles.currentMonth]}
+              >
+                {month}
+              </Text>
+            ))}
+          </View>
         </View>
       </View>
       
@@ -550,11 +594,51 @@ const styles = StyleSheet.create({
     justifyContent: 'center' 
   },
   chartContainer: {
-    marginTop: 5,
-    marginBottom: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
+    marginTop: 20,
+    marginBottom: 10,
+    paddingHorizontal: 16,
   },
+  chartWithLabels: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+  },
+  yAxis: {
+    height: 150,
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingRight: 10,
+    width: 60,
+  },
+  yAxisValueContainer: {
+    width: 60,
+  },
+  yAxisLabel: {
+    fontSize: 12,
+    color: '#000000',
+    fontWeight: 'bold',
+  },
+  chartMainArea: {
+    flex: 1,
+  },
+  monthsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingLeft: 60,
+    paddingRight: 20,
+    marginTop: -25,
+  },
+  monthLabel: {
+    fontSize: 12,
+    color: '#000000',
+    textAlign: 'center',
+  },
+  currentMonth: {
+    fontWeight: 'bold',
+    color: '#4D82F3',
+  },
+
   totalContainer: {
     marginTop: 'auto',
     marginBottom: 10,

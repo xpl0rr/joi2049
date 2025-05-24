@@ -69,7 +69,7 @@ export default function WalletScreen() {
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'} />
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <View style={styles.container}>
         <View style={styles.header}>
           <Text style={[styles.greeting, { color: colors.text }]}>Welcome Back</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Your finances are looking good</Text>
@@ -85,12 +85,7 @@ export default function WalletScreen() {
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Accounts</Text>
           </View>
           
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false} 
-            style={styles.accountsList}
-            contentContainerStyle={styles.accountsListContent}
-          >
+          <View style={styles.accountsRow}>
             {sampleAccounts.map(account => (
               <AccountCard 
                 key={account.id} 
@@ -98,7 +93,7 @@ export default function WalletScreen() {
                 onPress={() => console.log(`Account ${account.name} pressed`)} 
               />
             ))}
-          </ScrollView>
+          </View>
         </View>
         
         <View style={styles.transactionsSection}>
@@ -107,7 +102,7 @@ export default function WalletScreen() {
             onTransactionPress={(transaction) => console.log('Transaction pressed:', transaction.title)} 
           />
         </View>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -145,12 +140,10 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '600',
   },
-  accountsList: {
-    marginLeft: -4,
-  },
-  accountsListContent: {
-    paddingLeft: 4,
-    paddingRight: 16,
+  accountsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
   transactionsSection: {
     flex: 1,

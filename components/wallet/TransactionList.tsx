@@ -44,8 +44,8 @@ export default function TransactionList({ transactions, onTransactionPress }: Tr
       style={styles.transactionItem}
       onPress={() => onTransactionPress && onTransactionPress(item)}
     >
-      <View style={[styles.iconContainer, { backgroundColor: colors.backgroundLight }]}>
-        <Ionicons name={getCategoryIcon(item.category)} size={20} color={colors.primary} />
+      <View style={[styles.iconContainer, { backgroundColor: colors.background }]}>
+        <Ionicons name={getCategoryIcon(item.category)} size={20} color={colors.tint} />
       </View>
       
       <View style={styles.transactionDetails}>
@@ -67,23 +67,23 @@ export default function TransactionList({ transactions, onTransactionPress }: Tr
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text }]}>Transactions</Text>
         <TouchableOpacity>
-          <Text style={[styles.viewAll, { color: colors.primary }]}>View All</Text>
+          <Text style={[styles.viewAll, { color: colors.tint }]}>View All</Text>
         </TouchableOpacity>
       </View>
       
-      <FlatList
-        data={transactions}
-        renderItem={renderTransactionItem}
-        keyExtractor={item => item.id}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-              No transactions yet
-            </Text>
-          </View>
-        }
-      />
+      {transactions.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+            No transactions yet
+          </Text>
+        </View>
+      ) : (
+        transactions.map(item => (
+          <React.Fragment key={item.id}>
+            {renderTransactionItem({ item })}
+          </React.Fragment>
+        ))
+      )}
     </View>
   );
 }

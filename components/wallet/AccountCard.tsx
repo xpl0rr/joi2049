@@ -26,7 +26,7 @@ export default function AccountCard({ account, onPress }: AccountCardProps) {
       case 'red': return '#FF5C5C';
       case 'blue': return '#4F7BF3';
       case 'purple': return '#C24DF3';
-      default: return colors.primary;
+      default: return colors.tint;
     }
   };
 

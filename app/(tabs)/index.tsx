@@ -69,8 +69,8 @@ export default function DashboardScreen() {
             onUpdate={config => setCalendarConfig(config)}
           />
         </View>
-        {/* Invisible spacer to push content up */}
-        <View style={{height: 0}} />
+        {/* Flexible spacer to push content up and fill remaining space */}
+        <View style={{flex: 1}} />
       </View>
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
   addButton: { width: 32, height: 32, backgroundColor: '#4D82F3', borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   activitiesSection: { marginBottom: 12 },
   activityList: { maxHeight: 150 }, // Limit height of activity list
-  calendarWrapper: { flex: 1, justifyContent: 'flex-end', marginBottom: 0, paddingBottom: 0 }, // Use flex to push to bottom
+  calendarWrapper: { marginBottom: 8 }, // Removed flex:1 and justifyContent, added marginBottom to mirror chart's gap
   item: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
   itemText: { fontSize: 16, color: '#000' },
   emptyText: { textAlign: 'center', color: '#6B7280', marginTop: 20 },

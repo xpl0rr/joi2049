@@ -10,6 +10,9 @@ export default function DashboardScreen() {
   const [calendarConfig, setCalendarConfig] = useState({ events: [], view: 'month', selectedDate: new Date().toISOString() });
   const [newActivity, setNewActivity] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
+  const [activitiesExpanded, setActivitiesExpanded] = useState(true);
+  
+  const toggleActivities = () => setActivitiesExpanded(!activitiesExpanded);
   
   // Get store functions and state
   const initialize = useCalendarStore(state => state.initialize);
@@ -45,27 +48,37 @@ export default function DashboardScreen() {
       <View style={styles.contentContainer}>
         {/* Activities Card */}
         <View style={styles.card}>
-          <View style={styles.cardHeader}>
+          <Pressable onPress={toggleActivities} style={styles.cardHeader}>
             <Text style={styles.cardTitle}>Activities</Text>
-            <Pressable style={styles.addButton} onPress={openModal}>
-              <IconSymbol name="plus" size={20} color="#FFF" />
-            </Pressable>
-          </View>
+            <View style={styles.headerButtons}>
+              <Pressable style={styles.addButton} onPress={openModal}>
+                <IconSymbol name="plus" size={20} color="#FFF" />
+              </Pressable>
+              <IconSymbol 
+                name={activitiesExpanded ? "chevron.up" : "chevron.down"} 
+                size={20} 
+                color="#000" 
+                style={styles.chevron}
+              />
+            </View>
+          </Pressable>
           
-          <FlatList
-            data={activities}
-            keyExtractor={item => item}
-            ListEmptyComponent={<Text style={styles.emptyText}>No activities yet.</Text>}
-            renderItem={({ item }) => (
-              <View style={styles.row}>
-                <Text style={styles.itemText}>{item}</Text>
-                <Pressable onPress={() => removeActivityStore(item)} style={styles.deleteButton}>
-                  <IconSymbol name="trash" size={20} color="#EF4444" />
-                </Pressable>
-              </View>
-            )}
-            style={styles.listContainer}
-          />
+          {activitiesExpanded && (
+            <FlatList
+              data={activities}
+              keyExtractor={item => item}
+              ListEmptyComponent={<Text style={styles.emptyText}>No activities yet.</Text>}
+              renderItem={({ item }) => (
+                <View style={styles.row}>
+                  <Text style={styles.itemText}>{item}</Text>
+                  <Pressable onPress={() => removeActivityStore(item)} style={styles.deleteButton}>
+                    <IconSymbol name="trash" size={20} color="#EF4444" />
+                  </Pressable>
+                </View>
+              )}
+              style={styles.listContainer}
+            />
+          )}
         </View>
         
         {/* Calendar Card */}
@@ -226,5 +239,12 @@ const styles = StyleSheet.create({
   deleteButton: { 
     padding: 8,
     marginLeft: 8,
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  chevron: {
+    marginLeft: 10,
   },
 });

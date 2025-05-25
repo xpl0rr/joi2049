@@ -105,17 +105,15 @@ const styles = StyleSheet.create({
   activitiesSection: { 
     flex: 1, // Make it take available space
     marginBottom: 12, 
-    paddingBottom: 345, // Estimated Calendar Height (332) + gap (10) + buffer (3)
+    // Removed hardcoded paddingBottom to allow natural spacing
   },
   activityList: { maxHeight: 150 }, // Limit height of activity list
   calendarWrapper: {
     position: 'absolute',
-    bottom: 10, // 10px from the bottom of contentContainer
+    bottom: 6, // 6px from the bottom of contentContainer (tab bar is at 0)
     left: 0,
     right: 0,
-    // We might need to adjust marginHorizontal if the calendar itself doesn't have padding
-    // marginHorizontal: 16, // To match typical screen padding, if needed
-    // backgroundColor: 'rgba(255, 0, 0, 0.1)', // Removed Light Red
+    // Remove background color to eliminate the shading
   },
 
   item: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },

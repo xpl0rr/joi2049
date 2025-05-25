@@ -611,7 +611,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#F3F4F6',
   },
   monthContainer: {
-    // minHeight: 220, // Removed
+    // Remove any fixed heights to let content determine size
+    paddingBottom: 0, // Ensure no bottom padding
   },
   weekdaysRow: {
     flexDirection: 'row',
@@ -630,15 +631,17 @@ const styles = StyleSheet.create({
   daysGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 0, // No bottom margin
-    // minHeight: 200, // Removed Minimal height needed for all rows
+    marginBottom: 0,
+    paddingBottom: 0,
+    // Remove any fixed heights to allow content to determine size
   },
   dayCell: {
     width: '14.28%',
-    aspectRatio: 0.9, // Slightly shorter height than width
+    height: 40, // Fixed height for each day cell
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
+    paddingVertical: 0, // Remove vertical padding
   },
   todayIndicator: {
     position: 'absolute',

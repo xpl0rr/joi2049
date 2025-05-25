@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, FlatList, Modal, TextInput, Pressable } from 'react-native';
+import { StyleSheet, View, Text, Pressable, Modal, TextInput, FlatList, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/Colors';
 import CalendarWidget from '@/components/widgets/CalendarWidget';
@@ -10,6 +10,7 @@ export default function DashboardScreen() {
   const [calendarConfig, setCalendarConfig] = useState({ events: [], view: 'month', selectedDate: new Date().toISOString() });
   const [newActivity, setNewActivity] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
+  const [showActivities, setShowActivities] = useState(true);
   
   // Get store functions and state
   const initialize = useCalendarStore(state => state.initialize);
@@ -39,74 +40,89 @@ export default function DashboardScreen() {
   const removeActivity = (key: string) => removeActivityStore(key);
 
   return (
-    <SafeAreaView edges={['top', 'bottom']} style={styles.safeArea}>
-      <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>Home</Text>
-          <Pressable 
-            onPress={openModal} 
-            style={({ pressed }) => ({
-              ...styles.addButton,
-              opacity: pressed ? 0.8 : 1
-            })}
-          >
-            <IconSymbol name="plus" size={20} color="#FFF" />
-          </Pressable>
-        </View>
-        
-        {/* Activities List */}
-        <View style={styles.card}>
-          <FlatList
-            data={activities}
-            keyExtractor={item => item}
-            ListEmptyComponent={
-              <Text style={styles.emptyText}>No activities yet. Tap + to add one.</Text>
-            }
-            renderItem={({ item }) => (
-              <View style={styles.activityItem}>
-                <Text style={styles.activityText}>{String(item)}</Text>
-                <Pressable 
-                  onPress={() => removeActivity(item)} 
-                  style={({ pressed }) => ({
-                    ...styles.deleteButton,
-                    opacity: pressed ? 0.5 : 1
-                  })}
-                >
-                  <IconSymbol name="trash" size={20} color="#EF4444" />
-                </Pressable>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+      <View style={styles.mainContainer}>
+        <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+          {/* Header */}
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Home</Text>
+          </View>
+          
+          {/* Calendar Section */}
+          <View style={styles.sectionContainer}>
+            <CalendarWidget onUpdate={() => {}} />
+          </View>
+          
+          {/* Activities Section */}
+          <View style={styles.sectionContainer}>
+            <View style={styles.sectionHeader}>
+              <Pressable 
+                onPress={() => setShowActivities(!showActivities)}
+                style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}
+              >
+                <Text style={styles.sectionTitle}>Activities</Text>
+                <IconSymbol 
+                  name={showActivities ? 'chevron-up' : 'chevron-down'} 
+                  size={20} 
+                  color="#666666"
+                  style={{ marginLeft: 8 }}
+                />
+              </Pressable>
+              <Pressable 
+                onPress={openModal}
+                style={[styles.addButton, { backgroundColor: '#4D82F3' }]}
+              >
+                <IconSymbol name="plus" size={20} color="#FFFFFF" />
+              </Pressable>
+            </View>
+            
+            {showActivities && (
+              <View style={styles.activitiesList}>
+                {activities.length === 0 ? (
+                  <Text style={styles.emptyText}>No activities added.</Text>
+                ) : (
+                  activities.map((item) => (
+                    <View key={item} style={styles.activityItem}>
+                      <Text style={styles.activityText}>{String(item)}</Text>
+                      <Pressable 
+                        onPress={() => removeActivity(item)} 
+                        style={({ pressed }) => ({
+                          padding: 4,
+                          opacity: pressed ? 0.6 : 1
+                        })}
+                      >
+                        <IconSymbol name="trash" size={20} color="#EF4444" />
+                      </Pressable>
+                    </View>
+                  ))
+                )}
               </View>
             )}
-            contentContainerStyle={styles.activitiesListContent}
-            style={styles.activitiesList}
-          />
-        </View>
-        
-        {/* Calendar Widget */}
-        <View style={styles.calendarWrapper}>
-          <CalendarWidget
-            events={calendarConfig.events}
-            onUpdate={config => setCalendarConfig(config)}
-          />
-        </View>
+          </View>
+        </ScrollView>
       </View>
-      
+
       {/* Add Activity Modal */}
-      <Modal visible={modalVisible} transparent animationType="fade">
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>New Activity</Text>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Add New Activity</Text>
             <TextInput
               style={styles.input}
-              placeholder="Enter activity name..."
-              placeholderTextColor="#9CA3AF"
+              placeholder="Enter activity name"
               value={newActivity}
               onChangeText={setNewActivity}
+              onSubmitEditing={addActivity}
               autoFocus
             />
             <View style={styles.modalActions}>
               <Pressable 
-                style={[styles.modalButton, styles.cancelButton]}
+                style={[styles.modalButton, styles.cancelButton]} 
                 onPress={() => setModalVisible(false)}
               >
                 <Text style={styles.cancelButtonText}>Cancel</Text>
@@ -114,9 +130,8 @@ export default function DashboardScreen() {
               <Pressable 
                 style={[styles.modalButton, styles.saveButton]}
                 onPress={addActivity}
-                disabled={!newActivity.trim()}
               >
-                <Text style={styles.saveButtonText}>Add Activity</Text>
+                <Text style={styles.saveButtonText}>Add</Text>
               </Pressable>
             </View>
           </View>
@@ -127,100 +142,14 @@ export default function DashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  // Container styles
-  safeArea: {
+  mainContainer: {
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
-  container: {
+  scrollContainer: {
     flex: 1,
     padding: 16,
   },
-  
-  // Header
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-    marginTop: 8,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#000000',
-    flex: 1,
-    textAlign: 'center',
-  },
-  addButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#4D82F3',
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  
-  // Card and Activities List
-  card: {
-    backgroundColor: '#F5F5F5',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    flex: 1,
-  },
-  activitiesList: {
-    flex: 1,
-  },
-  activitiesListContent: {
-    paddingBottom: 8,
-  },
-  activityItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  activityText: {
-    flex: 1,
-    fontSize: 16,
-    color: '#1F2937',
-    lineHeight: 22,
-  },
-  deleteButton: {
-    marginLeft: 12,
-    padding: 6,
-  },
-  emptyText: {
-    textAlign: 'center',
-    marginTop: 24,
-    fontSize: 16,
-    color: '#6B7280',
-    paddingHorizontal: 16,
-  },
-  
-  // Calendar Wrapper
-  calendarWrapper: {
-    position: 'absolute',
-    bottom: 6,
-    left: 0,
-    right: 0,
-  },
-  
-  // Modal Styles
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -228,22 +157,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
   },
-  modalCard: {
-    width: '100%',
-    backgroundColor: '#FFFFFF',
+  modalContainer: {
+    width: '90%',
+    backgroundColor: 'white',
     borderRadius: 16,
-    padding: 24,
+    padding: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
     elevation: 5,
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: '600',
+    marginBottom: 16,
+    textAlign: 'center',
     color: '#000000',
-    marginBottom: 20,
   },
   input: {
     borderWidth: 1,
@@ -253,34 +183,99 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#1F2937',
     backgroundColor: '#F9FAFB',
-    marginBottom: 24,
+    marginBottom: 16,
   },
   modalActions: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
+    marginTop: 8,
   },
   modalButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    padding: 12,
     borderRadius: 8,
-    marginLeft: 12,
-    minWidth: 100,
     alignItems: 'center',
+    minWidth: 100,
+    marginLeft: 12,
   },
   cancelButton: {
-    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    backgroundColor: 'transparent',
   },
   saveButton: {
     backgroundColor: '#4D82F3',
   },
   cancelButtonText: {
-    color: '#4B5563',
+    color: '#6B7280',
     fontWeight: '600',
     fontSize: 16,
   },
   saveButtonText: {
     color: '#FFFFFF',
     fontWeight: '600',
+    fontSize: 16,
+  },
+  addButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  sectionContainer: {
+    marginBottom: 16,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 16,
+    overflow: 'hidden',
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#000000',
+  },
+  activitiesList: {
+    minHeight: 50,
+  },
+  activityItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  activityText: {
+    fontSize: 16,
+    color: '#1F2937',
+    flex: 1,
+    marginLeft: 12,
+    padding: 6,
+  },
+  emptyText: {
+    textAlign: 'center',
+    color: '#666666',
+    padding: 16,
+    fontStyle: 'italic',
     fontSize: 16,
   },
 });

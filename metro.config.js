@@ -5,6 +5,7 @@ const path = require('path');
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getDefaultConfig(__dirname);
 
+/*
 // Custom resolver configuration to handle missing modules
 config.resolver.extraNodeModules = {
   ...config.resolver.extraNodeModules,
@@ -42,5 +43,6 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
   // Default resolver
   return context.resolveRequest(context, moduleName, platform);
 };
+*/
 
 module.exports = config;

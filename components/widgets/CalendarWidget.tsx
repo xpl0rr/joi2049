@@ -304,38 +304,38 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
     return (
       <Svg height="48" width="48" viewBox="0 0 24 24">
         {/* Outer ring (red) */}
-        {ringData.outer && (
+        {ringData.outer ? (
           <Circle
             cx="12"
             cy="12"
             r="8"
             stroke="#FF3B30"
-            strokeWidth="2"
+            strokeWidth={2}
             fill="transparent"
           />
-        )}
+        ) : null}
         
         {/* Middle ring (blue) */}
-        {ringData.middle && (
+        {ringData.middle ? (
           <Circle
             cx="12"
             cy="12"
             r="5"
             stroke="#4D82F3"
-            strokeWidth="2"
+            strokeWidth={2}
             fill="transparent"
           />
-        )}
+        ) : null}
         
         {/* Center dot (black) */}
-        {ringData.center && (
+        {ringData.center ? (
           <Circle
             cx="12"
             cy="12"
             r="2"
             fill="#000000"
           />
-        )}
+        ) : null}
       </Svg>
     );
   };
@@ -584,7 +584,8 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     backgroundColor: 'transparent',
-    minHeight: 240, // Minimal height needed
+    // minHeight: 220, // Removed minimal height
+    paddingTop: 8, // Added padding above header
     marginBottom: 0,
     paddingBottom: 0,
   },
@@ -610,7 +611,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F3F4F6',
   },
   monthContainer: {
-    minHeight: 220, // Further reduced
+    // minHeight: 220, // Removed
   },
   weekdaysRow: {
     flexDirection: 'row',
@@ -630,7 +631,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     marginBottom: 0, // No bottom margin
-    minHeight: 200, // Minimal height needed for all rows
+    // minHeight: 200, // Removed Minimal height needed for all rows
   },
   dayCell: {
     width: '14.28%',

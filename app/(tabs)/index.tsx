@@ -39,7 +39,7 @@ export default function DashboardScreen() {
   const removeActivity = (key: string) => removeActivityStore(key);
 
   return (
-    <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: Colors.light.background }]}>      
+    <SafeAreaView edges={['top', 'bottom']} style={[styles.container, { backgroundColor: Colors.light.background }]}>      
       <View style={styles.header}>
         <Text style={[styles.title, { color: '#000' }]}>Home</Text>
         <Pressable style={styles.addButton} onPress={openModal}>
@@ -50,20 +50,20 @@ export default function DashboardScreen() {
         <View style={styles.activitiesSection}>
           <FlatList
             data={activities}
-            style={styles.activityList}
-            keyExtractor={item => item}
+            style={styles.activityList} // Ensure this style doesn't conflict, or remove if not needed
+            keyExtractor={item => item} // Assuming activities are strings for now, adjust if objects
             ListEmptyComponent={<Text style={styles.emptyText}>No activities yet.</Text>}
             renderItem={({ item }) => (
               <View style={styles.item}>
-                <Text style={styles.itemText}>{String(item)}</Text>
-                <Pressable onPress={() => removeActivityStore(item)} style={styles.deleteButton}>
+                <Text style={styles.itemText}>{String(item)}</Text> {/* Restore original item rendering */}
+                <Pressable onPress={() => removeActivity(item)} style={styles.deleteButton}>
                   <IconSymbol name="trash" size={20} color="#EF4444" />
                 </Pressable>
               </View>
             )}
           />
         </View>
-        <View style={{ flex: 1 }} /> {/* Flexible spacer */}
+        
         <View style={styles.calendarWrapper}>
           <CalendarWidget
             events={calendarConfig.events}
@@ -97,16 +97,27 @@ export default function DashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 16 }, 
-  contentContainer: { flex: 1, flexDirection: 'column', paddingBottom: 16 },
+  container: { flex: 1, paddingHorizontal: 16, paddingTop: 16, paddingBottom: 0 }, // Set paddingBottom to 0 
+  contentContainer: { flex: 1, flexDirection: 'column', /*paddingBottom: 16,*/ position: 'relative' },
   header: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginTop: 16, marginBottom: 12 },
   title: { position: 'absolute', left: 16, right: 16, textAlign: 'center', fontSize: 18, fontWeight: '600' },
   addButton: { width: 32, height: 32, backgroundColor: '#4D82F3', borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  activitiesSection: { marginBottom: 12 },
+  activitiesSection: { 
+    flex: 1, // Make it take available space
+    marginBottom: 12, 
+    paddingBottom: 345, // Estimated Calendar Height (332) + gap (10) + buffer (3)
+  },
   activityList: { maxHeight: 150 }, // Limit height of activity list
   calendarWrapper: {
-    marginBottom: 10 // Match finance screen's chart container margin
+    position: 'absolute',
+    bottom: 10, // 10px from the bottom of contentContainer
+    left: 0,
+    right: 0,
+    // We might need to adjust marginHorizontal if the calendar itself doesn't have padding
+    // marginHorizontal: 16, // To match typical screen padding, if needed
+    // backgroundColor: 'rgba(255, 0, 0, 0.1)', // Removed Light Red
   },
+
   item: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
   itemText: { fontSize: 16, color: '#000' },
   emptyText: { textAlign: 'center', color: '#6B7280', marginTop: 20 },

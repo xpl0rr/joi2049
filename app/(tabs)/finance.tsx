@@ -238,23 +238,12 @@ export default function FinanceScreen() {
   const currentYear = new Date().getFullYear();
   const monthlyTotals = Array(12).fill(0);
   
-  // Initialize explicit monthly totals for testing
-  monthlyTotals[4] = 1345; // May
-  monthlyTotals[5] = 130;  // June
-  
   // First, populate data from spending history (this includes all recorded spending)
-  // Skip this for now while debugging
-  /*
   spendingHistory.forEach(item => {
     if (item.year === currentYear) {
       monthlyTotals[item.month] += (item.billsTotal + item.discretionaryTotal);
     }
   });
-  */
-  
-  console.log('DEBUGGING - Monthly totals array:', JSON.stringify(monthlyTotals));
-  console.log('DEBUGGING - May value (index 4):', monthlyTotals[4]);
-  console.log('DEBUGGING - June value (index 5):', monthlyTotals[5]);
   
   // Now add current bills that are not yet in history
   bills.forEach(bill => {
@@ -286,9 +275,6 @@ export default function FinanceScreen() {
     const include = bill.createdMonth === currentMonth || (bill.recurring && bill.createdMonth <= currentMonth);
     return acc + (include ? bill.amount : 0);
   }, 0);
-  
-  // Let's log the raw spending history to see what's there
-  console.log('DEBUGGING - Raw spending history:', JSON.stringify(spendingHistory));
   
   // Calculate total discretionary spending for current month
   const discretionaryTotal = discretionary.reduce((acc, item) => {
@@ -511,26 +497,6 @@ export default function FinanceScreen() {
         </View>
                 {/* Chart at bottom */}
         <View style={styles.chartContainer}>
-          <View style={styles.chartWithLabels}>
-            {/* Left y-axis with values */}
-            <View style={styles.yAxis}>
-              <View style={styles.yAxisValueContainer}>
-                <Text style={styles.yAxisLabel}>${Math.round(totalSpending)}</Text>
-              </View>
-              <View style={styles.yAxisValueContainer}>
-                <Text style={styles.yAxisLabel}>${Math.round(totalSpending * 0.75)}</Text>
-              </View>
-              <View style={styles.yAxisValueContainer}>
-                <Text style={styles.yAxisLabel}>${Math.round(totalSpending * 0.5)}</Text>
-              </View>
-              <View style={styles.yAxisValueContainer}>
-                <Text style={styles.yAxisLabel}>${Math.round(totalSpending * 0.25)}</Text>
-              </View>
-              <View style={styles.yAxisValueContainer}>
-                <Text style={styles.yAxisLabel}>$0</Text>
-              </View>
-            </View>
-            
             {/* Main chart */}
             <View style={{ paddingVertical: 16 }}>
               <LineChart
@@ -539,13 +505,13 @@ export default function FinanceScreen() {
                   labels: ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'],
                   datasets: [
                     {
-                      data: [0, 0, 0, 0, 1345, 130, 0, 0, 0, 0, 0, 0], // Hardcoded to ensure we see May spike
+                      data: monthlyTotals, // Use dynamic monthlyTotals
                       color: () => '#4D82F3',
                       strokeWidth: 3
                     }
                   ]
                 }}
-                width={Dimensions.get('window').width - 80}
+                width={Dimensions.get('window').width - 32} // Adjusted to fill container width
                 height={200}
                 withDots={true}
                 withShadow={false}
@@ -570,7 +536,8 @@ export default function FinanceScreen() {
                   borderRadius: 16
                 }}
                 withVerticalLines={false}
-                withHorizontalLabels={true}
+                withHorizontalLabels={false}
+                withVerticalLabels={true}
                 fromZero={false}
                 yAxisInterval={1}
                 formatYLabel={(value) => `$${value}`}
@@ -596,20 +563,7 @@ export default function FinanceScreen() {
                 }}
               />
             </View>
-          </View>
           
-        </View>
-        
-        {/* Custom x-axis labels - separate from chart for better alignment */}
-        <View style={styles.monthsContainer}>
-          {['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'].map((month, index) => (
-            <Text 
-              key={`month-${index}`}
-              style={[styles.monthLabel, index === currentMonth && styles.currentMonth]}
-            >
-              {month}
-            </Text>
-          ))}
         </View>
       </View>
       
@@ -743,12 +697,6 @@ const styles = StyleSheet.create({
   chartContainer: {
     marginTop: 20,
     marginBottom: 10,
-    paddingHorizontal: 16,
-  },
-  chartWithLabels: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
   },
   yAxis: {
     height: 150,

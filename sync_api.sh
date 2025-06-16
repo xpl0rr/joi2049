@@ -4,7 +4,7 @@
 # This script syncs the local api/ directory to the remote server and restarts the API service
 
 echo "Syncing API files..."
-rsync -chazvP --exclude='__pycache__' --exclude='venv' api/ ocean:/var/www/joi2049/api
+rsync -chazvP --exclude='cloud.db' --exclude='__pycache__' --exclude='venv' api/ ocean:/var/www/joi2049/api
 
 # Check if rsync was successful
 if [ $? -eq 0 ]; then

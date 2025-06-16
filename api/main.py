@@ -19,6 +19,7 @@ class StorageItem(SQLModel, table=True):
 # Create tables
 SQLModel.metadata.create_all(engine)
 
+
 @app.get("/storage/{key}")
 def get_item(key: str):
     """Get a single item by key"""

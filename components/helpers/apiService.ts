@@ -32,7 +32,7 @@ export const getItem = async (key: string): Promise<any> => {
  */
 export const setItem = async (key: string, value: any): Promise<void> => {
   try {
-    const response = await fetch(`http://${API_URL}/storage/${encodeURIComponent(key)}`, {
+    const response = await fetch(`https://${API_URL}/storage/${encodeURIComponent(key)}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -58,7 +58,7 @@ export const setItem = async (key: string, value: any): Promise<void> => {
  */
 export const multiGet = async (keys: string[]): Promise<[string, any][]> => {
   try {
-    const response = await fetch(`http://${API_URL}/storage/multi/get`, {
+    const response = await fetch(`https://${API_URL}/storage/multi/get`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -89,7 +89,7 @@ export const multiSet = async (keyValuePairs: [string, any][]): Promise<void> =>
     // Convert [key, value][] to {key: value}
     const data = Object.fromEntries(keyValuePairs);
     
-    const response = await fetch(`http://${API_URL}/storage/multi`, {
+    const response = await fetch(`https://${API_URL}/storage/multi`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -114,7 +114,7 @@ export const multiSet = async (keyValuePairs: [string, any][]): Promise<void> =>
  */
 export const getAllKeys = async (): Promise<string[]> => {
   try {
-    const response = await fetch(`http://${API_URL}/storage`);
+    const response = await fetch(`https://${API_URL}/storage`);
     
     if (!response.ok) {
       throw new Error(`API error: ${response.status}`);
@@ -134,7 +134,7 @@ export const getAllKeys = async (): Promise<string[]> => {
  */
 export const removeItem = async (key: string): Promise<void> => {
   try {
-    const response = await fetch(`http://${API_URL}/storage/${encodeURIComponent(key)}`, {
+    const response = await fetch(`https://${API_URL}/storage/${encodeURIComponent(key)}`, {
       method: 'DELETE',
     });
     

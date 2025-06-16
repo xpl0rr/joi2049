@@ -3,7 +3,7 @@
  * Replaces AsyncStorage with server-based storage
  */
 
-const API_URL = 'joi2049.xplorr.me:8000';
+const API_URL = 'joi2049.xplorr.me';
 
 /**
  * Get an item from the API
@@ -12,7 +12,7 @@ const API_URL = 'joi2049.xplorr.me:8000';
  */
 export const getItem = async (key: string): Promise<any> => {
   try {
-    const response = await fetch(`http://${API_URL}/storage/${encodeURIComponent(key)}`);
+    const response = await fetch(`https://${API_URL}/storage/${encodeURIComponent(key)}`);
     if (!response.ok) {
       if (response.status === 404) return null;
       throw new Error(`API error: ${response.status}`);

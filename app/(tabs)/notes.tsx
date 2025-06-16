@@ -57,75 +57,69 @@ export default function NotesScreen() {
   // Export and imports for backup - moved from finance page
   const exportData = async () => {
     try {
-      const keys = await apiService.getAllKeys();
-      const result = await apiService.multiGet(keys);
-      const obj = Object.fromEntries(result);
-      
-      try {
-        if (obj['calendar-db']) {
-          const calendarData = JSON.parse(obj['calendar-db']);
-          if (calendarData.state && calendarData.state.activities) {
-            obj['calendar-activities'] = JSON.stringify(calendarData.state.activities);
-            console.log('Exported activities separately:', calendarData.state.activities.length, 'items');
-          }
-        }
-      } catch (e) {
-        console.error('Error extracting activities for export:', e);
-      }
-      
-      const json = JSON.stringify(obj);
-      const fileUri = FileSystem.documentDirectory + 'joi_backup.json';
-      await FileSystem.writeAsStringAsync(fileUri, json, { encoding: FileSystem.EncodingType.UTF8 });
-      await shareAsync(fileUri, { UTI: 'public.json', mimeType: 'application/json' });
+      console.log('Starting database export...');
+      const blob = await apiService.downloadDb();
+      const fileUri = FileSystem.documentDirectory + 'cloud.db';
+
+      // Convert blob to base64 to save with FileSystem
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onload = () => resolve((reader.result as string).split(',')[1]);
+        reader.onerror = (error) => reject(error);
+      });
+
+      await FileSystem.writeAsStringAsync(fileUri, base64, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      console.log('Database saved to:', fileUri);
+      await shareAsync(fileUri, { dialogTitle: 'Save cloud.db', UTI: 'public.database', mimeType: 'application/octet-stream' });
     } catch (e) {
-      console.error(e);
-      Alert.alert('Export Failed', 'Could not export data.');
+      console.error('Export failed:', e);
+      Alert.alert('Export Failed', 'Could not export the database.');
     }
   };
 
   const importData = async () => {
     try {
-      console.log('Starting import process...');
-      const result = await DocumentPicker.getDocumentAsync({ type: 'application/json' });
-      
+      console.log('Starting database import...');
+      const result = await DocumentPicker.getDocumentAsync({
+        copyToCacheDirectory: false,
+        type: '*/*',
+      });
+
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const fileUri = result.assets[0].uri;
-        console.log('File picked, reading content from:', fileUri);
-        
-        const content = await FileSystem.readAsStringAsync(fileUri, { encoding: FileSystem.EncodingType.UTF8 });
-        console.log('File content length:', content.length);
-        
-        const obj = JSON.parse(content);
-        console.log('Parsed JSON with', Object.keys(obj).length, 'keys');
-        
-        // Create a new object with unpacked values for selected keys
-        const modifiedObj = {...obj};
-        
-        if (obj['@notes']) {
-          console.log('Found @notes in import, length:', obj['@notes'].length);
-          try {
-            const notesData = JSON.parse(obj['@notes']);
-            console.log('Parsed notes data:', notesData.length, 'items');
-            setNotes(notesData);
-          } catch (e) {
-            console.error('Error parsing @notes:', e);
-          }
-        }
-        
-        // Convert to entries for API
-        const entries = Object.entries(modifiedObj) as [string, string][];
-        console.log('Setting', entries.length, 'entries in API');
-        await apiService.multiSet(entries);
-        
-        Alert.alert('Import Successful', 'Data has been imported. The app will now reload.');
-        console.log('Reloading app with Updates.reloadAsync()...');
-        await Updates.reloadAsync();
+        console.log('File picked for upload:', fileUri);
+
+        Alert.alert(
+          'Confirm Import',
+          'Are you sure you want to overwrite the cloud database with the selected file? This action cannot be undone.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Overwrite',
+              style: 'destructive',
+              onPress: async () => {
+                try {
+                  await apiService.uploadDb(fileUri);
+                  Alert.alert('Import Successful', 'The database has been imported. The app will now reload.');
+                  await Updates.reloadAsync();
+                } catch (e) {
+                  console.error('Upload failed:', e);
+                  Alert.alert('Import Failed', 'Could not import the database: ' + (e instanceof Error ? e.message : String(e)));
+                }
+              },
+            },
+          ]
+        );
       } else {
-        console.log('Document picker canceled');
+        console.log('Document picker canceled.');
       }
     } catch (e) {
-      console.error('Import failed with error:', e);
-      Alert.alert('Import Failed', 'Could not import data: ' + (e instanceof Error ? e.message : String(e)));
+      console.error('Import process failed:', e);
+      Alert.alert('Import Failed', 'An unexpected error occurred: ' + (e instanceof Error ? e.message : String(e)));
     }
   };
 

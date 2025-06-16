@@ -1,13 +1,15 @@
 # main.py
-from fastapi import FastAPI, HTTPException, Body
+from fastapi import FastAPI, HTTPException, Body, UploadFile, File
 from sqlmodel import Field, Session, SQLModel, create_engine, select, SQLModel, JSON, Column
 from typing import Dict, List, Optional, Any, Union
 from pydantic import BaseModel
 import json
+from fastapi.responses import FileResponse
 
 app = FastAPI(title="Joi Cloud Storage")
 
 DATABASE_URL = "sqlite:///./cloud.db"
+DB_FILE_PATH = "./cloud.db"
 engine = create_engine(DATABASE_URL, echo=True)
 
 # Define models for different data types
@@ -111,6 +113,27 @@ def multi_get(keys: List[str] = Body(...)):
                 except:
                     result[key] = item.value
         return result
+
+
+@app.get("/db", response_class=FileResponse)
+async def get_db_file():
+    """Download the SQLite database file."""
+    return FileResponse(path=DB_FILE_PATH, media_type='application/octet-stream', filename='cloud.db')
+
+@app.post("/db")
+async def upload_db_file(file: UploadFile = File(...)):
+    """Upload and replace the SQLite database file."""
+    try:
+        with open(DB_FILE_PATH, "wb") as buffer:
+            content = await file.read()
+            buffer.write(content)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Could not save file: {e}")
+    finally:
+        await file.close()
+        
+    return {"filename": file.filename, "success": True}
+
 
 # Legacy support for old endpoint
 @app.get("/items")

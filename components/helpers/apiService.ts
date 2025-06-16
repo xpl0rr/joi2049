@@ -2,6 +2,8 @@
  * API Service for interacting with the backend for data persistence.
  */
 
+import * as FileSystem from 'expo-file-system';
+
 const API_URL = 'joi2049.xplorr.me';
 
 /**
@@ -145,6 +147,46 @@ export const removeItem = async (key: string): Promise<void> => {
   }
 };
 
+/**
+ * Downloads the entire database file from the server.
+ * @returns A Blob representing the database file.
+ */
+export const downloadDb = async (): Promise<Blob> => {
+  try {
+    const response = await fetch(`https://${API_URL}/db`);
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    return await response.blob();
+  } catch (error) {
+    console.error('Failed to download database:', error);
+    throw error;
+  }
+};
+
+/**
+ * Uploads a database file to the server, overwriting the existing one.
+ * @param fileUri The URI of the database file to upload.
+ */
+export const uploadDb = async (fileUri: string): Promise<void> => {
+  try {
+    const response = await FileSystem.uploadAsync(`https://${API_URL}/db`, fileUri, {
+      httpMethod: 'POST',
+      uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+      headers: {
+        'Content-Type': 'application/octet-stream',
+      },
+    });
+
+    if (response.status >= 400) {
+      throw new Error(`API error: ${response.status} ${response.body}`);
+    }
+  } catch (error) {
+    console.error('Failed to upload database:', error);
+    throw error;
+  }
+};
+
 // Export a default object with the API service methods
 export default {
   getItem,
@@ -153,4 +195,6 @@ export default {
   multiSet,
   getAllKeys,
   removeItem,
+  downloadDb,
+  uploadDb,
 };

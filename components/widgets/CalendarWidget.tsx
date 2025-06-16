@@ -3,7 +3,7 @@ import { StyleSheet, View, Text, TouchableOpacity, FlatList, ActivityIndicator, 
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { IconSymbol } from '../ui/IconSymbol';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import apiService from '../helpers/apiService';
 import Svg, { Circle } from 'react-native-svg';
 
 // Days of week abbreviations
@@ -85,12 +85,12 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
   useEffect(() => {
     const loadCalendarRings = async () => {
       try {
-        const savedRings = await AsyncStorage.getItem(STORAGE_KEY);
+        const savedRings = await apiService.getItem(STORAGE_KEY);
         if (savedRings) {
-          setCalendarRings(JSON.parse(savedRings));
+          setCalendarRings(savedRings);
         }
       } catch (error) {
-        console.error('Failed to load calendar rings:', error);
+        console.error('Failed to load calendar rings from API:', error);
       }
       setIsLoading(false);
     };
@@ -102,7 +102,7 @@ const CalendarWidget: React.FC<CalendarWidgetProps> = ({
   useEffect(() => {
     const saveCalendarRings = async () => {
       try {
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(calendarRings));
+        await apiService.setItem(STORAGE_KEY, calendarRings);
         console.log('Saved rings:', JSON.stringify(calendarRings));
       } catch (error) {
         console.error('Failed to save calendar rings:', error);

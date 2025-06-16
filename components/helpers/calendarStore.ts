@@ -1,7 +1,7 @@
 // app/(tabs)/calendarStore.ts
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import apiService from './apiService';
 
 // Storage keys
 const STORAGE_KEY = 'calendar-db';
@@ -35,57 +35,55 @@ export interface CalendarState {
   initialized: boolean;
 }
 
-// Helper function to save state to AsyncStorage
+// Helper function to save state to API
 const saveState = async (db: CalendarDB, activities: ActivityKey[]) => {
   try {
     // Save calendar data
     const calendarData = JSON.stringify({ db });
-    await AsyncStorage.setItem(STORAGE_KEY, calendarData);
+    await apiService.setItem(STORAGE_KEY, { db });
     
     // Save activities separately to ensure they're preserved
-    const activitiesData = JSON.stringify(activities);
-    await AsyncStorage.setItem(ACTIVITIES_KEY, activitiesData);
+    await apiService.setItem(ACTIVITIES_KEY, activities);
     
-    console.log('Saved calendar data and activities');
+    console.log('Saved calendar data and activities to API');
   } catch (error) {
-    console.error('Failed to save calendar data:', error);
+    console.error('Failed to save calendar data to API:', error);
   }
 };
 
-// Helper function to load state from AsyncStorage
+// Helper function to load state from API
 const loadState = async (): Promise<{ db: CalendarDB; activities: ActivityKey[] }> => {
   try {
     // Default empty state
     const defaultState = { db: {}, activities: [] };
     
     // Load calendar data
-    const calendarData = await AsyncStorage.getItem(STORAGE_KEY);
+    const calendarData = await apiService.getItem(STORAGE_KEY);
     let db = {};
     if (calendarData) {
       try {
-        const parsed = JSON.parse(calendarData);
-        db = parsed.db || {};
-        console.log('Loaded calendar data successfully');
+        // API service already parses JSON
+        db = calendarData.db || {};
+        console.log('Loaded calendar data successfully from API');
       } catch (e) {
-        console.error('Error parsing calendar data:', e);
+        console.error('Error processing calendar data from API:', e);
       }
     }
     
     // Load activities (with fallback)
-    const activitiesData = await AsyncStorage.getItem(ACTIVITIES_KEY);
-    let activities: ActivityKey[] = [];
-    if (activitiesData) {
-      try {
-        activities = JSON.parse(activitiesData) || [];
-        console.log(`Loaded ${activities.length} activities`);
-      } catch (e) {
-        console.error('Error parsing activities:', e);
-      }
+    const activities = await apiService.getItem(ACTIVITIES_KEY) || [];
+    if (activities && Array.isArray(activities)) {
+      console.log(`Loaded ${activities.length} activities from API`);
+    } else {
+      console.warn('No activities found or invalid format from API');
     }
     
-    return { db, activities };
+    return { 
+      db: db || {}, 
+      activities: Array.isArray(activities) ? activities : [] 
+    };
   } catch (error) {
-    console.error('Failed to load calendar data:', error);
+    console.error('Failed to load calendar data from API:', error);
     return { db: {}, activities: [] };
   }
 };

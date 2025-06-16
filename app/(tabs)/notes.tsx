@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, FlatList, Modal, TextInput, Pressable, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import apiService from '@/components/helpers/apiService';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { IconSymbol } from '@/components/ui/IconSymbol';
@@ -22,10 +22,10 @@ export default function NotesScreen() {
   useEffect(() => {
     (async () => {
       try {
-        const json = await AsyncStorage.getItem(STORAGE_KEY);
-        if (json) setNotes(JSON.parse(json));
+        const data = await apiService.getItem(STORAGE_KEY);
+        if (data) setNotes(data);
       } catch (e) {
-        console.error('Failed to load notes', e);
+        console.error('Failed to load notes from API', e);
       }
     })();
   }, []);
@@ -33,9 +33,9 @@ export default function NotesScreen() {
   useEffect(() => {
     (async () => {
       try {
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+        await apiService.setItem(STORAGE_KEY, notes);
       } catch (e) {
-        console.error('Failed to save notes', e);
+        console.error('Failed to save notes to API', e);
       }
     })();
   }, [notes]);
@@ -57,8 +57,8 @@ export default function NotesScreen() {
   // Export and imports for backup - moved from finance page
   const exportData = async () => {
     try {
-      const keys = await AsyncStorage.getAllKeys();
-      const result = await AsyncStorage.multiGet(keys);
+      const keys = await apiService.getAllKeys();
+      const result = await apiService.multiGet(keys);
       const obj = Object.fromEntries(result);
       
       try {
@@ -115,7 +115,7 @@ export default function NotesScreen() {
         // Convert to entries for AsyncStorage
         const entries = Object.entries(modifiedObj) as [string, string][];
         console.log('Setting', entries.length, 'entries in AsyncStorage');
-        await AsyncStorage.multiSet(entries);
+        await apiService.multiSet(entries);
         
         Alert.alert('Import Successful', 'Data has been imported. The app will now reload.');
         console.log('Reloading app with Updates.reloadAsync()...');

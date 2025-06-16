@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, TextInput, Modal, Switch, Pressable, ScrollView, Dimensions, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import apiService from '@/components/helpers/apiService';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -52,8 +52,8 @@ export default function FinanceScreen() {
   useEffect(() => {
     (async () => {
       try {
-        const json = await AsyncStorage.getItem(STORAGE_KEY);
-        if (json) setBills(JSON.parse(json));
+        const data = await apiService.getItem(STORAGE_KEY);
+        if (data) setBills(data);
       } catch (e) {
         console.error('Failed to load bills', e);
       } finally {
@@ -67,11 +67,10 @@ export default function FinanceScreen() {
   useEffect(() => {
     (async () => {
       try {
-        const json = await AsyncStorage.getItem(SPENDING_HISTORY_KEY);
-        if (json) {
-          const history = JSON.parse(json);
-          setSpendingHistory(history);
-          console.log('Loaded spending history:', history);
+        const data = await apiService.getItem(SPENDING_HISTORY_KEY);
+        if (data) {
+          setSpendingHistory(data);
+          console.log('Loaded spending history from API:', data);
         } else {
           // Initialize with demo data for May that shows $1345
           const mayData: MonthlySpending = {
@@ -81,7 +80,7 @@ export default function FinanceScreen() {
             discretionaryTotal: 1000 // Total of $1345
           };
           setSpendingHistory([mayData]);
-          await AsyncStorage.setItem(SPENDING_HISTORY_KEY, JSON.stringify([mayData]));
+          await apiService.setItem(SPENDING_HISTORY_KEY, [mayData]);
           console.log('Initialized spending history with May data');
         }
       } catch (e) {
@@ -94,7 +93,7 @@ export default function FinanceScreen() {
     if (!isLoadingBills) {
       (async () => {
         try {
-          await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(bills));
+          await apiService.setItem(STORAGE_KEY, bills);
         } catch (e) {
           console.error('Failed to save bills', e);
         }
@@ -105,8 +104,8 @@ export default function FinanceScreen() {
   useEffect(() => {
     (async () => {
       try {
-        const json = await AsyncStorage.getItem(DISCRETIONARY_KEY);
-        if (json) setDiscretionary(JSON.parse(json));
+        const data = await apiService.getItem(DISCRETIONARY_KEY);
+        if (data) setDiscretionary(data);
       } catch (e) {
         console.error('Failed to load discretionary', e);
       } finally {
@@ -119,7 +118,7 @@ export default function FinanceScreen() {
     if (!isLoadingDiscr) {
       (async () => {
         try {
-          await AsyncStorage.setItem(DISCRETIONARY_KEY, JSON.stringify(discretionary));
+          await apiService.setItem(DISCRETIONARY_KEY, discretionary);
         } catch (e) {
           console.error('Failed to save discretionary', e);
         }
@@ -223,7 +222,7 @@ export default function FinanceScreen() {
     if (spendingHistory.length > 0) {
       (async () => {
         try {
-          await AsyncStorage.setItem(SPENDING_HISTORY_KEY, JSON.stringify(spendingHistory));
+          await apiService.setItem(SPENDING_HISTORY_KEY, spendingHistory);
           console.log('Saved spending history', spendingHistory);
         } catch (e) {
           console.error('Failed to save spending history', e);
@@ -312,8 +311,8 @@ export default function FinanceScreen() {
   // Exports and imports for backup
   const exportData = async () => {
     try {
-      const keys = await AsyncStorage.getAllKeys();
-      const result = await AsyncStorage.multiGet(keys);
+      const keys = await apiService.getAllKeys();
+      const result = await apiService.multiGet(keys);
       const obj = Object.fromEntries(result);
       
       // Make sure we're also separately exporting the activities for backwards compatibility
@@ -404,8 +403,8 @@ export default function FinanceScreen() {
         
         // Convert to entries for AsyncStorage
         const entries = Object.entries(modifiedObj) as [string, string][];
-        console.log('Setting', entries.length, 'entries in AsyncStorage');
-        await AsyncStorage.multiSet(entries);
+        console.log('Setting', entries.length, 'entries in API');
+        await apiService.multiSet(entries);
         
         Alert.alert('Import Successful', 'Data has been imported. The app will now reload.');
         console.log('Reloading app with Updates.reloadAsync()...');

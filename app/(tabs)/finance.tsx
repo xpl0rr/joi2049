@@ -62,8 +62,7 @@ export default function FinanceScreen() {
     })();
   }, []);
   
-  // Load spending history from AsyncStorage
-  // Load spending history from AsyncStorage
+  // Load spending history from API
   useEffect(() => {
     (async () => {
       try {
@@ -387,7 +386,7 @@ export default function FinanceScreen() {
           }
         }
         
-        // Convert to entries for AsyncStorage
+        // Convert to entries for API
         const entries = Object.entries(modifiedObj) as [string, string][];
         console.log('Setting', entries.length, 'entries in API');
         await apiService.multiSet(entries);

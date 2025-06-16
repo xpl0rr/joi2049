@@ -1,6 +1,5 @@
 /**
- * API Service for interacting with the backend
- * Replaces AsyncStorage with server-based storage
+ * API Service for interacting with the backend for data persistence.
  */
 
 const API_URL = 'joi2049.xplorr.me';
@@ -70,7 +69,7 @@ export const multiGet = async (keys: string[]): Promise<[string, any][]> => {
     }
     
     const result = await response.json();
-    // Convert to format that matches AsyncStorage.multiGet: [key, value][]
+    // Convert to [key, value][] format
     return Object.entries(result);
   } catch (error) {
     console.error('Failed to multi-get items:', error);
@@ -146,7 +145,7 @@ export const removeItem = async (key: string): Promise<void> => {
   }
 };
 
-// Export a default object that mimics AsyncStorage API
+// Export a default object with the API service methods
 export default {
   getItem,
   setItem,

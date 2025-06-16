@@ -112,9 +112,9 @@ export default function NotesScreen() {
           }
         }
         
-        // Convert to entries for AsyncStorage
+        // Convert to entries for API
         const entries = Object.entries(modifiedObj) as [string, string][];
-        console.log('Setting', entries.length, 'entries in AsyncStorage');
+        console.log('Setting', entries.length, 'entries in API');
         await apiService.multiSet(entries);
         
         Alert.alert('Import Successful', 'Data has been imported. The app will now reload.');

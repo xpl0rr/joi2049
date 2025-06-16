@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { PersistenceHelper } from '@/helpers/persistenceHelper';
+import apiService from '@/components/helpers/apiService';
 
 // Define widget configuration interfaces for each widget type
 export interface CalendarWidgetConfig {
@@ -123,28 +123,29 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
   const [pages, setPages] = useState<Record<string, Page>>(defaultPages);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load data from AsyncStorage on component mount
+  // Load data from API on component mount
   useEffect(() => {
     const loadData = async () => {
       try {
-        console.log('Loading data from AsyncStorage...');
-        const storedPages = await PersistenceHelper.loadData<Record<string, Page>>(STORAGE_KEYS.PAGES, defaultPages);
-        
+        console.log('Loading data from API...');
+        const storedPages = await apiService.getItem(STORAGE_KEYS.PAGES);
+        const pagesToLoad = storedPages || defaultPages;
+
         // Ensure dashboard title and widgets are up-to-date
-        if (storedPages.dashboard) {
-          storedPages.dashboard.name = defaultPages.dashboard.name;
-          storedPages.dashboard.widgets = defaultPages.dashboard.widgets;
+        if (pagesToLoad.dashboard) {
+          pagesToLoad.dashboard.name = defaultPages.dashboard.name;
+          pagesToLoad.dashboard.widgets = defaultPages.dashboard.widgets;
         }
         
         // Clear todo widgets
-        if (storedPages.todo) {
-          storedPages.todo.widgets = [];
+        if (pagesToLoad.todo) {
+          pagesToLoad.todo.widgets = [];
         }
         
-        setPages(storedPages);
+        setPages(pagesToLoad);
         setIsLoaded(true);
       } catch (error) {
-        console.error('Error loading data from AsyncStorage:', error);
+        console.error('Error loading data from API:', error);
         setIsLoaded(true);
       }
     };
@@ -152,7 +153,7 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
     loadData();
   }, []);
 
-  // Save data to AsyncStorage when pages structure changes
+  // Save data to API when pages structure changes
   useEffect(() => {
     if (!isLoaded) {
       return; // Don't save during initial load
@@ -160,7 +161,7 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
     
     // We're already saving widget config changes separately in updateWidgetConfig
     // This will handle other changes like adding/removing pages or widgets
-    PersistenceHelper.saveData(STORAGE_KEYS.PAGES, pages);
+    apiService.setItem(STORAGE_KEYS.PAGES, pages);
   }, [pages, isLoaded]);
 
   // Add a widget to a page
@@ -227,9 +228,9 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
         }
       };
       
-      // Immediately save the updated data to AsyncStorage
-      PersistenceHelper.saveData(STORAGE_KEYS.PAGES, updatedPages);
-      console.log(`Saving widget ${widgetId} update to AsyncStorage`);
+      // Immediately save the updated data to the API
+      apiService.setItem(STORAGE_KEYS.PAGES, updatedPages);
+      console.log(`Saving widget ${widgetId} update to API`);
       
       return updatedPages;
     });
@@ -257,9 +258,11 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
 
   // Reset all data to defaults (for debugging)
   const resetToDefaults = async () => {
-    const success = await PersistenceHelper.removeData(STORAGE_KEYS.PAGES);
-    if (success) {
+    try {
+      await apiService.removeItem(STORAGE_KEYS.PAGES);
       setPages(defaultPages);
+    } catch (error) {
+      console.error('Failed to remove data for reset:', error);
     }
   };
 
@@ -353,9 +356,9 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
         }
       };
 
-      // Save updated pages to AsyncStorage
-      PersistenceHelper.saveData(STORAGE_KEYS.PAGES, updatedPages);
-      console.log(`Saving widget ${widgetId} thumbnail toggle to AsyncStorage`);
+      // Save updated pages to API
+      apiService.setItem(STORAGE_KEYS.PAGES, updatedPages);
+      console.log(`Saving widget ${widgetId} thumbnail toggle to API`);
       
       return updatedPages;
     });

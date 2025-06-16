@@ -172,10 +172,8 @@ export const uploadDb = async (fileUri: string): Promise<void> => {
   try {
     const response = await FileSystem.uploadAsync(`https://${API_URL}/db`, fileUri, {
       httpMethod: 'POST',
-      uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
-      headers: {
-        'Content-Type': 'application/octet-stream',
-      },
+      uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+      fieldName: 'file',
     });
 
     if (response.status >= 400) {

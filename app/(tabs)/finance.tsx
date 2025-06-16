@@ -495,74 +495,72 @@ export default function FinanceScreen() {
         <View style={styles.totalContainer}>
           <Text style={styles.totalTitle}>Spent this month: ${totalSpending.toFixed(2)}</Text>
         </View>
-                {/* Chart at bottom */}
+        {/* Chart at bottom */}
         <View style={styles.chartContainer}>
             {/* Main chart */}
-            <View style={{ paddingVertical: 16 }}>
-              <LineChart
-                bezier
-                data={{
-                  labels: ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'],
-                  datasets: [
-                    {
-                      data: monthlyTotals, // Use dynamic monthlyTotals
-                      color: () => '#4D82F3',
-                      strokeWidth: 3
-                    }
-                  ]
-                }}
-                width={Dimensions.get('window').width - 32} // Adjusted to fill container width
-                height={200}
-                withDots={true}
-                withShadow={false}
-                chartConfig={{
-                  backgroundColor: '#FFFFFF',
-                  backgroundGradientFrom: '#FFFFFF',
-                  backgroundGradientTo: '#FFFFFF',
-                  decimalPlaces: 0,
-                  color: (opacity = 1) => `rgba(77, 130, 243, ${opacity})`,
-                  labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                  style: {
-                    borderRadius: 16
-                  },
-                  propsForDots: {
-                    r: '6',
-                    strokeWidth: '2',
-                    stroke: '#4D82F3'
+            <LineChart
+              bezier
+              data={{
+                labels: ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'],
+                datasets: [
+                  {
+                    data: monthlyTotals, // Use dynamic monthlyTotals
+                    color: () => '#4D82F3',
+                    strokeWidth: 3
                   }
-                }}
-                style={{
-                  marginVertical: 8,
+                ]
+              }}
+              width={Dimensions.get('window').width - 32} // Adjusted for parent padding
+              height={200}
+              withDots={true}
+              withShadow={false}
+              chartConfig={{
+                backgroundColor: '#FFFFFF',
+                backgroundGradientFrom: '#FFFFFF',
+                backgroundGradientTo: '#FFFFFF',
+                decimalPlaces: 0,
+                color: (opacity = 1) => `rgba(77, 130, 243, ${opacity})`,
+                labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+                style: {
                   borderRadius: 16
-                }}
-                withVerticalLines={false}
-                withHorizontalLabels={false}
-                withVerticalLabels={true}
-                fromZero={false}
-                yAxisInterval={1}
-                formatYLabel={(value) => `$${value}`}
-                renderDotContent={({x, y, index, indexData}) => {
-                  // Only show labels for data points that have values
-                  if (indexData > 0) {
-                    return (
-                      <Text 
-                        key={index} 
-                        style={{
-                          position: 'absolute',
-                          top: y - 20,
-                          left: x - 15,
-                          fontSize: 12,
-                          color: '#4D82F3'
-                        }}
-                      >
-                        ${indexData}
-                      </Text>
-                    );
-                  }
-                  return null;
-                }}
-              />
-            </View>
+                },
+                propsForDots: {
+                  r: '6',
+                  strokeWidth: '2',
+                  stroke: '#4D82F3'
+                }
+              }}
+              style={{
+                marginVertical: 8,
+                borderRadius: 16
+              }}
+              withVerticalLines={false}
+              withHorizontalLabels={true}
+              withVerticalLabels={true}
+              fromZero={false}
+              yAxisInterval={1}
+              formatYLabel={(value) => `$${value}`}
+              renderDotContent={({x, y, index, indexData}) => {
+                // Only show labels for data points that have values
+                if (indexData > 0) {
+                  return (
+                    <Text 
+                      key={index} 
+                      style={{
+                        position: 'absolute',
+                        top: y - 20,
+                        left: x - 15,
+                        fontSize: 12,
+                        color: '#4D82F3'
+                      }}
+                    >
+                      ${indexData}
+                    </Text>
+                  );
+                }
+                return null;
+              }}
+            />
           
         </View>
       </View>
@@ -695,46 +693,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center' 
   },
   chartContainer: {
-    marginTop: 20,
-    marginBottom: 10,
   },
-  yAxis: {
-    height: 150,
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    paddingRight: 10,
-    width: 60,
-  },
-  yAxisValueContainer: {
-    width: 60,
-  },
-  yAxisLabel: {
-    fontSize: 12,
-    color: '#000000',
-    fontWeight: 'bold',
-  },
-  chartMainArea: {
-    flex: 1,
-  },
-  monthsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: Dimensions.get('window').width - 80,
-    marginLeft: 60,
-    marginTop: 10,
-    paddingHorizontal: 15, // Add padding to align the labels with dots
-  },
-  monthLabel: {
-    fontSize: 12,
-    color: '#000000',
-    textAlign: 'center',
-    width: 16, // Fixed width for each month label
-  },
-  currentMonth: {
-    fontWeight: 'bold',
-    color: '#4D82F3',
-  },
-
   totalContainer: {
     marginTop: 'auto',
     marginBottom: 10,

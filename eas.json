@@ -23,6 +23,11 @@
     "dev-release": {
       "distribution": "internal",
       "channel": "production"
+    },
+
+    "offline": {
+      "distribution": "internal",
+      "channel": "production"
     }
   },
 
